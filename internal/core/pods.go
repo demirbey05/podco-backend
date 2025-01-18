@@ -12,16 +12,33 @@ import (
 	"github.com/demirbey05/auth-demo/internal/store"
 )
 
+const (
+	ArticleGenerated int = iota
+	QuizGenerated
+	Error
+)
+
 func CreateNewPod(link string, podStore store.PodStore) (int, int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
 	// Insert a pod, job and set goroutines
+
+	podId, err := podStore.InsertPod(ctx, link)
+	if err != nil {
+		return 0, 0, fmt.Errorf("error inserting pod: %v", err)
+	}
+	jobId, err := podStore.InsertPodJob(ctx, podId)
+	if err != nil {
+		return 0, 0, fmt.Errorf("error inserting job: %v", err)
+	}
 
 	trans, err := getTranscript(link)
 	if err != nil {
 		return 0, 0, fmt.Errorf("error getting transcript: %v", err)
 	}
 
-	fmt.Println(trans)
-	return 0, 0, nil
+	go generateArticleJob(trans, podStore, podId, jobId)
+	return podId, jobId, nil
 
 }
 
@@ -84,4 +101,24 @@ func getTranscript(link string) (string, error) {
 	}
 
 	return transcriptResp.Transcript, nil
+}
+
+func generateArticleJob(transcript string, podStore store.PodStore, podId, jobId int) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	article, err := GenerateArticleFromTranscript(transcript)
+	if err != nil {
+		podStore.UpdatePodJob(ctx, jobId, Error)
+		return
+	}
+
+	if err := podStore.InsertArticle(ctx, podId, "machine", article); err != nil {
+		podStore.UpdatePodJob(ctx, jobId, Error)
+		return
+	}
+
+	if err := podStore.UpdatePodJob(ctx, jobId, ArticleGenerated); err != nil {
+		podStore.UpdatePodJob(ctx, jobId, Error)
+		return
+	}
 }
