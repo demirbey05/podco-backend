@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
 	"os"
 
-	"github.com/demirbey05/auth-demo/internal/auth"
+	"github.com/demirbey05/auth-demo/controllers/auth"
+	"github.com/demirbey05/auth-demo/controllers/core"
+	"github.com/demirbey05/auth-demo/db"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Server struct {
@@ -14,7 +18,12 @@ type Server struct {
 
 func NewServer() *Server {
 	r := gin.Default()
-	addRoutes(r)
+	conn, queries, err := initStores(os.Getenv("POSTGRES_URL"))
+	if err != nil {
+		panic(err)
+	}
+
+	addRoutes(r, conn, queries)
 
 	url := os.Getenv("SERVICE_URL")
 
@@ -23,7 +32,18 @@ func NewServer() *Server {
 func (s *Server) Run() {
 	s.routers.Run(s.url)
 }
+func initStores(postgresUrl string) (*pgxpool.Pool, *db.Queries, error) {
 
-func addRoutes(r *gin.Engine) {
+	conn, err := pgxpool.New(context.Background(), postgresUrl)
+	if err != nil {
+		return nil, nil, err
+	}
+	queries := db.New(conn)
+	return conn, queries, nil
+
+}
+
+func addRoutes(r *gin.Engine, conn *pgxpool.Pool, queries *db.Queries) {
 	auth.InitAuth(r)
+	core.InitCore(r, conn, queries)
 }
