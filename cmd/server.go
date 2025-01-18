@@ -18,7 +18,7 @@ type Server struct {
 
 func NewServer() *Server {
 	r := gin.Default()
-	conn, queries, err := initStores(os.Getenv("POSTGRES_URL"))
+	conn, queries, err := initStores(os.Getenv("DB_URL"))
 	if err != nil {
 		panic(err)
 	}

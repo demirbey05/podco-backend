@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    container_name: p2c-api
+    ports:
+      - "8080:8080"  # This maps host port 8080 to container port 8080
+    environment:
+      - DB_USER=baeldung
+      - DB_PASS=baeldung
+      - DB_NAME=p2c
+      - DB_PORT=5432
+      - DB_URL=postgres://baeldung:baeldung@postgres:5432/p2c
+      - LLM_KEY=${LLM_KEY}
+      - TRANSCRIBER_URL=http://p2c-transcriber:5000
+    networks:
+      - p2c-network
+    depends_on:
+      - postgres
+      - transcriber
+
+  transcriber:
+    image: youtube-transcript-api
+    container_name: p2c-transcriber
+    networks:
+      - p2c-network
+    expose:
+      - "5000"  # This exposes port 5000 to other containers but not to the host
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: p2c-postgres
+    environment:
+      - POSTGRES_USER=baeldung
+      - POSTGRES_PASSWORD=baeldung
+      - POSTGRES_DB=p2c
+    expose:
+      - "5432"  # This exposes port 5432 to other containers but not to the host
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - p2c-network
+
+volumes:
+  pgdata:
+
+networks:
+  p2c-network:
+    driver: bridge

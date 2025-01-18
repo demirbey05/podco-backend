@@ -1,6 +1,8 @@
 package core
 
 import (
+	"fmt"
+
 	"github.com/demirbey05/auth-demo/db"
 	"github.com/demirbey05/auth-demo/internal/core"
 	"github.com/demirbey05/auth-demo/internal/store"
@@ -28,6 +30,7 @@ func createNewPod(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 
 	tx, err := conn.Begin(c)
 	if err != nil {
+		fmt.Println(err)
 		c.JSON(500, gin.H{"error": "internal error"})
 		return
 	}
