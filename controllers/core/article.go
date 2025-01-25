@@ -39,6 +39,19 @@ func createNewPod(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 	qtx := queries.WithTx(tx)
 	podStore := store.NewDBPodStore(qtx)
 
-	core.CreateNewPod(req.Link, podStore)
+	podID, jobID, err := core.CreateNewPod(req.Link, podStore)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(500, gin.H{"error": "internal error"})
+		return
+	}
+
+	if err := tx.Commit(c); err != nil {
+		fmt.Println(err)
+		c.JSON(500, gin.H{"error": "internal error"})
+		return
+	}
+
+	c.JSON(200, resp{PodID: podID, JobId: jobID})
 
 }

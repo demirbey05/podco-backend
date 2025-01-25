@@ -35,8 +35,8 @@ services:
       - POSTGRES_USER=baeldung
       - POSTGRES_PASSWORD=baeldung
       - POSTGRES_DB=p2c
-    expose:
-      - "5432"  # This exposes port 5432 to other containers but not to the host
+    ports:
+      - "5432:5432"  # This exposes port 5432 to other containers but not to the host
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:

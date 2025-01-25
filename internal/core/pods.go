@@ -37,7 +37,7 @@ func CreateNewPod(link string, podStore store.PodStore) (int, int, error) {
 		return 0, 0, fmt.Errorf("error getting transcript: %v", err)
 	}
 
-	go generateArticleJob(trans, podStore, podId, jobId)
+	generateArticleJob(trans, podStore, podId, jobId)
 	return podId, jobId, nil
 
 }
@@ -122,31 +122,35 @@ func generateArticleJob(transcript string, podStore store.PodStore, podId, jobId
 		return
 	}
 
-	go generateQuizJob(article, podStore, podId, jobId)
+	generateQuizJob(article, podStore, podId, jobId)
 }
 func generateQuizJob(article string, podStore store.PodStore, podID, jobId int) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 	quiz, err := GenerateQuizzesFromArticle(article)
 	if err != nil {
+		fmt.Println(err)
 		podStore.UpdatePodJob(ctx, jobId, Error)
 		return
 	}
 
 	quizID, err := podStore.InsertQuiz(ctx, podID, "machine")
 	if err != nil {
+		fmt.Println(err)
 		podStore.UpdatePodJob(ctx, jobId, Error)
 		return
 	}
 
 	for _, question := range quiz.Questions {
 		if _, err := podStore.InsertQuestion(ctx, quizID, question.Question, question.Options, question.Answer); err != nil {
+			fmt.Println(err)
 			podStore.UpdatePodJob(ctx, jobId, Error)
 			return
 		}
 	}
 
 	if err := podStore.UpdatePodJob(ctx, jobId, QuizGenerated); err != nil {
+		fmt.Println(err)
 		podStore.UpdatePodJob(ctx, jobId, Error)
 		return
 	}

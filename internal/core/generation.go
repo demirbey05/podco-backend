@@ -9,22 +9,15 @@ import (
 	"strings"
 
 	"github.com/google/generative-ai-go/genai"
-	"github.com/joho/godotenv"
 	"google.golang.org/api/option"
 )
 
-var model *genai.GenerativeModel
-
-func init() {
-
-	if err := godotenv.Load(".env"); err != nil {
-		log.Print("No .env file found")
-	}
+func GenerateArticleFromTranscript(transcript string) (string, error) {
 	ctx := context.Background()
 
 	apiKey, ok := os.LookupEnv("LLM_KEY")
 	if !ok {
-		log.Fatalln("Environment variable GEMINI_API_KEY not set")
+		log.Fatalln("Environment variable LLM_KEY not set")
 	}
 
 	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
@@ -33,18 +26,13 @@ func init() {
 	}
 	defer client.Close()
 
-	model = client.GenerativeModel("gemini-2.0-flash-exp")
+	model := client.GenerativeModel("gemini-2.0-flash-exp")
 
 	model.SetTemperature(1)
 	model.SetTopK(40)
 	model.SetTopP(0.95)
 	model.SetMaxOutputTokens(8192)
 	model.ResponseMIMEType = "text/plain"
-
-}
-
-func GenerateArticleFromTranscript(transcript string) (string, error) {
-	ctx := context.Background()
 
 	session := model.StartChat()
 	session.History = []*genai.Content{}
@@ -74,6 +62,24 @@ type Quiz struct {
 
 func GenerateQuizzesFromArticle(article string) (*Quiz, error) {
 	ctx := context.Background()
+
+	apiKey, ok := os.LookupEnv("LLM_KEY")
+	if !ok {
+		log.Fatalln("Environment variable LLM_KEY not set")
+	}
+
+	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
+	if err != nil {
+		log.Fatalf("Error creating client: %v", err)
+	}
+
+	model := client.GenerativeModel("gemini-2.0-flash-exp")
+
+	model.SetTemperature(1)
+	model.SetTopK(40)
+	model.SetTopP(0.95)
+	model.SetMaxOutputTokens(8192)
+	model.ResponseMIMEType = "text/plain"
 	session := model.StartChat()
 	session.History = []*genai.Content{}
 
@@ -102,10 +108,14 @@ func GenerateQuizzesFromArticle(article string) (*Quiz, error) {
 		rawResponse.WriteString(fmt.Sprintf("%v", part))
 	}
 
-	// Clean and parse JSON
-	cleaned := strings.Trim(rawResponse.String(), "` \n")
+	// Clean up the response by removing markdown code block markers
+	cleanedResponse := strings.TrimPrefix(rawResponse.String(), "```json\n")
+	cleanedResponse = strings.TrimSuffix(cleanedResponse, "```\n")
+	cleanedResponse = strings.TrimSpace(cleanedResponse) // Remove any remaining whitespace
+
 	var quizResp Quiz
-	if err := json.Unmarshal([]byte(cleaned), &quizResp); err != nil {
+	if err := json.Unmarshal([]byte(cleanedResponse), &quizResp); err != nil {
+		fmt.Println(cleanedResponse)
 		return nil, fmt.Errorf("failed to parse quiz response: %v", err)
 	}
 
