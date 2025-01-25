@@ -121,4 +121,34 @@ func generateArticleJob(transcript string, podStore store.PodStore, podId, jobId
 		podStore.UpdatePodJob(ctx, jobId, Error)
 		return
 	}
+
+	go generateQuizJob(article, podStore, podId, jobId)
+}
+func generateQuizJob(article string, podStore store.PodStore, podID, jobId int) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	quiz, err := GenerateQuizzesFromArticle(article)
+	if err != nil {
+		podStore.UpdatePodJob(ctx, jobId, Error)
+		return
+	}
+
+	quizID, err := podStore.InsertQuiz(ctx, podID, "machine")
+	if err != nil {
+		podStore.UpdatePodJob(ctx, jobId, Error)
+		return
+	}
+
+	for _, question := range quiz.Questions {
+		if _, err := podStore.InsertQuestion(ctx, quizID, question.Question, question.Options, question.Answer); err != nil {
+			podStore.UpdatePodJob(ctx, jobId, Error)
+			return
+		}
+	}
+
+	if err := podStore.UpdatePodJob(ctx, jobId, QuizGenerated); err != nil {
+		podStore.UpdatePodJob(ctx, jobId, Error)
+		return
+	}
+
 }

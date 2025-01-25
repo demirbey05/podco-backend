@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -59,4 +60,54 @@ func GenerateArticleFromTranscript(transcript string) (string, error) {
 	}
 
 	return article.String(), nil
+}
+
+type QuizQuestion struct {
+	Question string   `json:"question"`
+	Options  []string `json:"options"`
+	Answer   int      `json:"true_answer_index"`
+}
+
+type Quiz struct {
+	Questions []QuizQuestion `json:"questions"`
+}
+
+func GenerateQuizzesFromArticle(article string) (*Quiz, error) {
+	ctx := context.Background()
+	session := model.StartChat()
+	session.History = []*genai.Content{}
+
+	prompt := fmt.Sprintf(`Generate a 5-question quiz based on this article. Follow these rules:
+	1. Each question must have exactly 4 options
+	2. Options must be plausible distractors
+	3. True answer index must be 0-3
+	4. Output must be valid JSON matching this format:
+	{
+		"questions": [
+			{
+				"question": "...",
+				"options": ["a", "b", "c", "d"],
+				"true_answer_index": 0
+			}
+		]
+	}
+	Article: %s`, article)
+
+	resp, err := session.SendMessage(ctx, genai.Text(prompt))
+	if err != nil {
+		return nil, fmt.Errorf("error sending message: %v", err)
+	}
+	var rawResponse strings.Builder
+	for _, part := range resp.Candidates[0].Content.Parts {
+		rawResponse.WriteString(fmt.Sprintf("%v", part))
+	}
+
+	// Clean and parse JSON
+	cleaned := strings.Trim(rawResponse.String(), "` \n")
+	var quizResp Quiz
+	if err := json.Unmarshal([]byte(cleaned), &quizResp); err != nil {
+		return nil, fmt.Errorf("failed to parse quiz response: %v", err)
+	}
+
+	return &quizResp, nil
 }
