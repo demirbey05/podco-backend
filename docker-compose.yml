@@ -7,12 +7,6 @@ services:
     ports:
       - "8080:8080"  # This maps host port 8080 to container port 8080
     environment:
-      - DB_USER=baeldung
-      - DB_PASS=baeldung
-      - DB_NAME=p2c
-      - DB_PORT=5432
-      - DB_URL=postgres://baeldung:baeldung@postgres:5432/p2c
-      - LLM_KEY=${LLM_KEY}
       - TRANSCRIBER_URL=http://p2c-transcriber:5000
     networks:
       - p2c-network
@@ -21,7 +15,7 @@ services:
       - transcriber
 
   transcriber:
-    image: youtube-transcript-api
+    image: demirbey05/youtube-transcription
     container_name: p2c-transcriber
     networks:
       - p2c-network
