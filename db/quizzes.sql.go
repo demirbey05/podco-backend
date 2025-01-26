@@ -11,6 +11,22 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const getQuizByPodId = `-- name: GetQuizByPodId :one
+SELECT id,pod_id FROM quizzes WHERE pod_id = $1 LIMIT 1
+`
+
+type GetQuizByPodIdRow struct {
+	ID    int32
+	PodID pgtype.Int4
+}
+
+func (q *Queries) GetQuizByPodId(ctx context.Context, podID pgtype.Int4) (GetQuizByPodIdRow, error) {
+	row := q.db.QueryRow(ctx, getQuizByPodId, podID)
+	var i GetQuizByPodIdRow
+	err := row.Scan(&i.ID, &i.PodID)
+	return i, err
+}
+
 const insertQuiz = `-- name: InsertQuiz :one
 INSERT INTO quizzes (pod_id, created_by)
 VALUES ($1, $2)

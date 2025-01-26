@@ -55,3 +55,57 @@ func createNewPod(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 	c.JSON(200, resp{PodID: podID, JobId: jobID})
 
 }
+
+func getArticle(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
+	podID := c.Param("pod_id")
+	var podIDInt int
+	if _, err := fmt.Sscan(podID, &podIDInt); err != nil {
+		c.JSON(400, gin.H{"error": "invalid pod_id"})
+		return
+	}
+
+	podStore := store.NewDBPodStore(queries)
+	article, err := podStore.GetArticleByPodID(c.Request.Context(), podIDInt)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "internal error"})
+		return
+	}
+
+	c.JSON(200, gin.H{"article": article})
+}
+
+func getQuiz(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
+	podID := c.Param("pod_id")
+	var podIDInt int
+	if _, err := fmt.Sscan(podID, &podIDInt); err != nil {
+		c.JSON(400, gin.H{"error": "invalid pod_id"})
+		return
+	}
+
+	podStore := store.NewDBPodStore(queries)
+	quiz, err := podStore.GetQuizByPodID(c.Request.Context(), podIDInt)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "internal error"})
+		return
+	}
+
+	c.JSON(200, gin.H{"quiz": quiz})
+}
+
+func getJobStatus(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
+	jobID := c.Param("job_id")
+	var jobIDInt int
+	if _, err := fmt.Sscan(jobID, &jobIDInt); err != nil {
+		c.JSON(400, gin.H{"error": "invalid job_id"})
+		return
+	}
+
+	podStore := store.NewDBPodStore(queries)
+	status, err := podStore.GetJobStatus(c.Request.Context(), jobIDInt)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "internal error"})
+		return
+	}
+
+	c.JSON(200, gin.H{"status": status})
+}

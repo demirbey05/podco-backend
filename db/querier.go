@@ -6,12 +6,17 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
+	GetArticleByPodId(ctx context.Context, podID pgtype.Int4) (string, error)
 	GetJobStatusByID(ctx context.Context, id int32) (int32, error)
 	GetJobStatusByPodID(ctx context.Context, podID int32) (int32, error)
 	GetPodByLink(ctx context.Context, link string) ([]Pod, error)
+	GetQuestionByQuizId(ctx context.Context, quizzesID pgtype.Int4) ([]GetQuestionByQuizIdRow, error)
+	GetQuizByPodId(ctx context.Context, podID pgtype.Int4) (GetQuizByPodIdRow, error)
 	InsertArticle(ctx context.Context, arg InsertArticleParams) error
 	InsertJob(ctx context.Context, podID int32) (int32, error)
 	InsertPod(ctx context.Context, link string) (int32, error)

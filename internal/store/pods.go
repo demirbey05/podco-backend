@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/demirbey05/auth-demo/db"
@@ -16,12 +17,29 @@ type PodStore interface {
 	InsertQuestion(ctx context.Context, quizId int, question string, options []string, correctIndex int) (int, error)
 	InsertPodJob(ctx context.Context, podId int) (int, error)
 	UpdatePodJob(ctx context.Context, jobId int, status int) error
+	GetArticleByPodID(ctx context.Context, podID int) (string, error)
+	GetQuizByPodID(ctx context.Context, podID int) (QuizWithQuestions, error)
+	GetJobStatus(ctx context.Context, jobID int) (int, error)
 }
+
 type Pod struct {
 	ID        int
 	Link      string
 	Title     string
 	CreatedAt time.Time
+}
+
+type QuizWithQuestions struct {
+	ID        int        `json:"id"`
+	PodID     int        `json:"pod_id"`
+	Questions []Question `json:"questions"`
+}
+
+type Question struct {
+	ID        int      `json:"id"`
+	Text      string   `json:"question"`
+	Options   []string `json:"options"`
+	AnswerIdx int      `json:"correct_answer_index"`
 }
 
 type DBPodStore struct {
@@ -46,7 +64,6 @@ func (s *DBPodStore) GetPodsByLink(ctx context.Context, link string) ([]Pod, err
 		}
 	}
 	return pods, nil
-
 }
 
 // InsertPod inserts a new Pod and returns its ID.
@@ -104,4 +121,48 @@ func (s *DBPodStore) InsertPodJob(ctx context.Context, podId int) (int, error) {
 
 func (s *DBPodStore) UpdatePodJob(ctx context.Context, jobId int, status int) error {
 	return s.queries.UpdateJobStatusByID(ctx, db.UpdateJobStatusByIDParams{ID: int32(jobId), JobStatus: int32(status)})
+}
+
+func (s *DBPodStore) GetArticleByPodID(ctx context.Context, podID int) (string, error) {
+	article, err := s.queries.GetArticleByPodId(ctx, pgtype.Int4{Int32: int32(podID), Valid: true})
+	if err != nil {
+		return "", fmt.Errorf("error getting article: %w", err)
+	}
+	return article, nil
+}
+
+func (s *DBPodStore) GetQuizByPodID(ctx context.Context, podID int) (QuizWithQuestions, error) {
+	quiz, err := s.queries.GetQuizByPodId(ctx, pgtype.Int4{Int32: int32(podID), Valid: true})
+	if err != nil {
+		return QuizWithQuestions{}, fmt.Errorf("error getting quiz: %w", err)
+	}
+
+	questions, err := s.queries.GetQuestionByQuizId(ctx, pgtype.Int4{Int32: int32(quiz.ID), Valid: true})
+	if err != nil {
+		return QuizWithQuestions{}, fmt.Errorf("error getting questions: %w", err)
+	}
+
+	result := QuizWithQuestions{
+		ID:    int(quiz.ID),
+		PodID: int(quiz.PodID.Int32),
+	}
+
+	for _, q := range questions {
+		result.Questions = append(result.Questions, Question{
+			ID:        int(q.ID),
+			Text:      q.QuestionText,
+			Options:   q.Options,
+			AnswerIdx: int(q.CorrectOption),
+		})
+	}
+
+	return result, nil
+}
+
+func (s *DBPodStore) GetJobStatus(ctx context.Context, jobID int) (int, error) {
+	status, err := s.queries.GetJobStatusByID(ctx, int32(jobID))
+	if err != nil {
+		return 0, fmt.Errorf("error getting job status: %w", err)
+	}
+	return int(status), nil
 }

@@ -11,6 +11,42 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const getQuestionByQuizId = `-- name: GetQuestionByQuizId :many
+SELECT id,question_text,options,correct_option FROM questions WHERE quizzes_id = $1
+`
+
+type GetQuestionByQuizIdRow struct {
+	ID            int32
+	QuestionText  string
+	Options       []string
+	CorrectOption int32
+}
+
+func (q *Queries) GetQuestionByQuizId(ctx context.Context, quizzesID pgtype.Int4) ([]GetQuestionByQuizIdRow, error) {
+	rows, err := q.db.Query(ctx, getQuestionByQuizId, quizzesID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetQuestionByQuizIdRow
+	for rows.Next() {
+		var i GetQuestionByQuizIdRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.QuestionText,
+			&i.Options,
+			&i.CorrectOption,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertQuestion = `-- name: InsertQuestion :one
 INSERT INTO questions (quizzes_id, question_text, options, correct_option)
 VALUES ($1, $2, $3, $4)

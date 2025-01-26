@@ -11,6 +11,17 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const getArticleByPodId = `-- name: GetArticleByPodId :one
+SELECT article_text FROM articles WHERE pod_id = $1 LIMIT 1
+`
+
+func (q *Queries) GetArticleByPodId(ctx context.Context, podID pgtype.Int4) (string, error) {
+	row := q.db.QueryRow(ctx, getArticleByPodId, podID)
+	var article_text string
+	err := row.Scan(&article_text)
+	return article_text, err
+}
+
 const insertArticle = `-- name: InsertArticle :exec
 INSERT INTO articles (pod_id, created_by, article_text)
 VALUES ($1, $2, $3)
