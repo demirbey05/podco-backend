@@ -27,6 +27,17 @@ func (q *Queries) GetQuizByPodId(ctx context.Context, podID pgtype.Int4) (GetQui
 	return i, err
 }
 
+const getQuizOwner = `-- name: GetQuizOwner :one
+SELECT p.created_by FROM quizzes q INNER JOIN pods p ON q.pod_id = p.id WHERE q.pod_id = $1 LIMIT 1
+`
+
+func (q *Queries) GetQuizOwner(ctx context.Context, podID pgtype.Int4) (string, error) {
+	row := q.db.QueryRow(ctx, getQuizOwner, podID)
+	var created_by string
+	err := row.Scan(&created_by)
+	return created_by, err
+}
+
 const insertQuiz = `-- name: InsertQuiz :one
 INSERT INTO quizzes (pod_id)
 VALUES ($1)

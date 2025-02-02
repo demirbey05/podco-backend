@@ -36,7 +36,4 @@ func InitCore(g *gin.Engine, conn *pgxpool.Pool, queries *db.Queries, app *fireb
 	protected.GET("/pods/:pod_id/quiz", func(ctx *gin.Context) {
 		getQuiz(ctx, conn, queries)
 	})
-	protected.GET("/jobs/:job_id/status", func(ctx *gin.Context) {
-		getJobStatus(ctx, conn, queries)
-	})
 }

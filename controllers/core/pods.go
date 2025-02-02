@@ -68,8 +68,23 @@ func getArticle(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 		c.JSON(400, gin.H{"error": "invalid pod_id"})
 		return
 	}
+	userID := c.GetString("uuid")
+	if userID == "" {
+		c.JSON(401, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	podStore := store.NewDBPodStore(queries)
+
+	isOwner, err := podStore.IsArticleOwner(c.Request.Context(), podIDInt, userID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "internal error"})
+		return
+	}
+	if !isOwner {
+		c.JSON(401, gin.H{"error": "unauthorized"})
+		return
+	}
 	article, err := podStore.GetArticleByPodID(c.Request.Context(), podIDInt)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "internal error"})
@@ -87,7 +102,22 @@ func getQuiz(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 		return
 	}
 
+	userID := c.GetString("uuid")
+	if userID == "" {
+		c.JSON(401, gin.H{"error": "unauthorized"})
+		return
+	}
+
 	podStore := store.NewDBPodStore(queries)
+	isOwner, err := podStore.IsQuizOwner(c.Request.Context(), podIDInt, userID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "internal error"})
+		return
+	}
+	if !isOwner {
+		c.JSON(401, gin.H{"error": "unauthorized"})
+		return
+	}
 	quiz, err := podStore.GetQuizByPodID(c.Request.Context(), podIDInt)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "internal error"})
@@ -95,22 +125,4 @@ func getQuiz(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 	}
 
 	c.JSON(200, gin.H{"quiz": quiz})
-}
-
-func getJobStatus(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
-	jobID := c.Param("job_id")
-	var jobIDInt int
-	if _, err := fmt.Sscan(jobID, &jobIDInt); err != nil {
-		c.JSON(400, gin.H{"error": "invalid job_id"})
-		return
-	}
-
-	podStore := store.NewDBPodStore(queries)
-	status, err := podStore.GetJobStatus(c.Request.Context(), jobIDInt)
-	if err != nil {
-		c.JSON(500, gin.H{"error": "internal error"})
-		return
-	}
-
-	c.JSON(200, gin.H{"status": status})
 }

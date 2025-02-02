@@ -21,6 +21,8 @@ type PodStore interface {
 	GetQuizByPodID(ctx context.Context, podID int) (QuizWithQuestions, error)
 	GetJobStatus(ctx context.Context, jobID int) (int, error)
 	GetPodByUserID(ctx context.Context, userId string) ([]Pod, error)
+	IsArticleOwner(ctx context.Context, articleID int, userID string) (bool, error)
+	IsQuizOwner(ctx context.Context, quizID int, userID string) (bool, error)
 }
 
 type Pod struct {
@@ -179,4 +181,20 @@ func (s *DBPodStore) GetJobStatus(ctx context.Context, jobID int) (int, error) {
 		return 0, fmt.Errorf("error getting job status: %w", err)
 	}
 	return int(status), nil
+}
+
+func (s *DBPodStore) IsArticleOwner(ctx context.Context, articleID int, userID string) (bool, error) {
+	articleOwner, err := s.queries.GetArticleOwner(ctx, pgtype.Int4{Int32: int32(articleID), Valid: true})
+	if err != nil {
+		return false, fmt.Errorf("error getting article owner: %w", err)
+	}
+	return articleOwner == userID, nil
+}
+
+func (s *DBPodStore) IsQuizOwner(ctx context.Context, quizID int, userID string) (bool, error) {
+	quizOwner, err := s.queries.GetQuizOwner(ctx, pgtype.Int4{Int32: int32(quizID), Valid: true})
+	if err != nil {
+		return false, fmt.Errorf("error getting quiz owner: %w", err)
+	}
+	return quizOwner == userID, nil
 }
