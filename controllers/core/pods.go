@@ -61,6 +61,25 @@ func createNewPod(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 
 }
 
+func getPodsByUserID(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
+
+	userID := c.GetString("uuid")
+	if userID == "" {
+		c.JSON(401, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	podStore := store.NewDBPodStore(queries)
+
+	pods, err := podStore.GetPodsByUserID(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "internal error"})
+		return
+	}
+
+	c.JSON(200, gin.H{"pods": pods})
+}
+
 func getArticle(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 	podID := c.Param("pod_id")
 	var podIDInt int

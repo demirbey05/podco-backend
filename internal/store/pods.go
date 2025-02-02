@@ -20,7 +20,7 @@ type PodStore interface {
 	GetArticleByPodID(ctx context.Context, podID int) (string, error)
 	GetQuizByPodID(ctx context.Context, podID int) (QuizWithQuestions, error)
 	GetJobStatus(ctx context.Context, jobID int) (int, error)
-	GetPodByUserID(ctx context.Context, userId string) ([]Pod, error)
+	GetPodsByUserID(ctx context.Context, userId string) ([]Pod, error)
 	IsArticleOwner(ctx context.Context, articleID int, userID string) (bool, error)
 	IsQuizOwner(ctx context.Context, quizID int, userID string) (bool, error)
 }
@@ -63,13 +63,14 @@ func (s *DBPodStore) GetPodsByLink(ctx context.Context, link string) ([]Pod, err
 		pods[i] = Pod{
 			ID:        int(pod.ID),
 			Link:      pod.Link,
+			Title:     pod.Title,
 			CreatedAt: pod.CreatedAt.Time,
 		}
 	}
 	return pods, nil
 }
 
-func (s *DBPodStore) GetPodByUserID(ctx context.Context, userId string) ([]Pod, error) {
+func (s *DBPodStore) GetPodsByUserID(ctx context.Context, userId string) ([]Pod, error) {
 	podDb, err := s.queries.GetPodsByUserID(ctx, userId)
 	if err != nil {
 		return nil, err

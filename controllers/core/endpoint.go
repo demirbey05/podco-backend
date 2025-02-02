@@ -33,6 +33,10 @@ func InitCore(g *gin.Engine, conn *pgxpool.Pool, queries *db.Queries, app *fireb
 	protected.GET("/pods/:pod_id/article", func(ctx *gin.Context) {
 		getArticle(ctx, conn, queries)
 	})
+	protected.GET("/my-pods", func(ctx *gin.Context) {
+		getPodsByUserID(ctx, conn, queries)
+	})
+
 	protected.GET("/pods/:pod_id/quiz", func(ctx *gin.Context) {
 		getQuiz(ctx, conn, queries)
 	})
