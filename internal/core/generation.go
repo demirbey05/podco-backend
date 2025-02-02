@@ -37,7 +37,7 @@ func GenerateArticleFromTranscript(transcript string) (string, error) {
 	session := model.StartChat()
 	session.History = []*genai.Content{}
 
-	resp, err := session.SendMessage(ctx, genai.Text("I will send you a transcription of the podcast. Can you generate medium like article from it?\n"+transcript))
+	resp, err := session.SendMessage(ctx, genai.Text(generateArticlePrompt(transcript)))
 	if err != nil {
 		return "", fmt.Errorf("error sending message: %v", err)
 	}
@@ -83,21 +83,7 @@ func GenerateQuizzesFromArticle(article string) (*Quiz, error) {
 	session := model.StartChat()
 	session.History = []*genai.Content{}
 
-	prompt := fmt.Sprintf(`Generate a 5-question quiz based on this article. Follow these rules:
-	1. Each question must have exactly 4 options
-	2. Options must be plausible distractors
-	3. True answer index must be 0-3
-	4. Output must be valid JSON matching this format:
-	{
-		"questions": [
-			{
-				"question": "...",
-				"options": ["a", "b", "c", "d"],
-				"true_answer_index": 0
-			}
-		]
-	}
-	Article: %s`, article)
+	prompt := generateQuizPrompt(article)
 
 	resp, err := session.SendMessage(ctx, genai.Text(prompt))
 	if err != nil {
