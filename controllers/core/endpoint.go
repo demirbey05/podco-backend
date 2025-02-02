@@ -27,20 +27,16 @@ func InitCore(g *gin.Engine, conn *pgxpool.Pool, queries *db.Queries, app *fireb
 
 	protected.Use(middleware.FirebaseAuthMiddleware(app))
 
-	protected.POST("/try", func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{"message": "You are authorized"})
-	})
-
-	v1.POST("/create-pod", func(ctx *gin.Context) {
+	protected.POST("/create-pod", func(ctx *gin.Context) {
 		createNewPod(ctx, conn, queries)
 	})
-	v1.GET("/pods/:pod_id/article", func(ctx *gin.Context) {
+	protected.GET("/pods/:pod_id/article", func(ctx *gin.Context) {
 		getArticle(ctx, conn, queries)
 	})
-	v1.GET("/pods/:pod_id/quiz", func(ctx *gin.Context) {
+	protected.GET("/pods/:pod_id/quiz", func(ctx *gin.Context) {
 		getQuiz(ctx, conn, queries)
 	})
-	v1.GET("/jobs/:job_id/status", func(ctx *gin.Context) {
+	protected.GET("/jobs/:job_id/status", func(ctx *gin.Context) {
 		getJobStatus(ctx, conn, queries)
 	})
 }

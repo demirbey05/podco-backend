@@ -18,12 +18,12 @@ const (
 	Error
 )
 
-func CreateNewPod(link string, podStore store.PodStore) (int, int, error) {
+func CreateNewPod(link, userID string, podStore store.PodStore) (int, int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 	// Insert a pod, job and set goroutines
 
-	podId, err := podStore.InsertPod(ctx, link)
+	podId, err := podStore.InsertPod(ctx, link, "", userID)
 	if err != nil {
 		return 0, 0, fmt.Errorf("error inserting pod: %v", err)
 	}
@@ -112,7 +112,7 @@ func generateArticleJob(transcript string, podStore store.PodStore, podId, jobId
 		return
 	}
 
-	if err := podStore.InsertArticle(ctx, podId, "machine", article); err != nil {
+	if err := podStore.InsertArticle(ctx, podId, article); err != nil {
 		podStore.UpdatePodJob(ctx, jobId, Error)
 		return
 	}
@@ -134,7 +134,7 @@ func generateQuizJob(article string, podStore store.PodStore, podID, jobId int) 
 		return
 	}
 
-	quizID, err := podStore.InsertQuiz(ctx, podID, "machine")
+	quizID, err := podStore.InsertQuiz(ctx, podID)
 	if err != nil {
 		fmt.Println(err)
 		podStore.UpdatePodJob(ctx, jobId, Error)

@@ -27,6 +27,11 @@ func createNewPod(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 		PodID int `json:"pod_id"`
 		JobId int `json:"job_id"`
 	}
+	userID := c.GetString("uuid")
+	if userID == "" {
+		c.JSON(401, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	tx, err := conn.Begin(c)
 	if err != nil {
@@ -39,7 +44,7 @@ func createNewPod(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 	qtx := queries.WithTx(tx)
 	podStore := store.NewDBPodStore(qtx)
 
-	podID, jobID, err := core.CreateNewPod(req.Link, podStore)
+	podID, jobID, err := core.CreateNewPod(req.Link, userID, podStore)
 	if err != nil {
 		fmt.Println(err)
 		c.JSON(500, gin.H{"error": "internal error"})

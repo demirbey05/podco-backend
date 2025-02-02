@@ -44,7 +44,7 @@ func FirebaseAuthMiddleware(app *firebase.App) gin.HandlerFunc {
 		log.Printf("Verified ID token: %v\n", token)
 
 		// Store the UID in the Gin context for use in downstream handlers
-		c.Set("firebaseUID", token.UID)
+		c.Set("uuid", token.UID)
 
 		// Proceed to the next handler
 		c.Next()

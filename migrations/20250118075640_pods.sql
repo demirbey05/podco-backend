@@ -2,6 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS pods (
     id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
     link TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(255) NOT NULL

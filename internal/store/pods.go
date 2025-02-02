@@ -11,15 +11,16 @@ import (
 
 type PodStore interface {
 	GetPodsByLink(ctx context.Context, link string) ([]Pod, error)
-	InsertPod(ctx context.Context, link string) (int, error)
-	InsertArticle(ctx context.Context, podId int, userID, content string) error
-	InsertQuiz(ctx context.Context, podId int, userID string) (int, error)
+	InsertPod(ctx context.Context, link, title, userId string) (int, error)
+	InsertArticle(ctx context.Context, podId int, content string) error
+	InsertQuiz(ctx context.Context, podId int) (int, error)
 	InsertQuestion(ctx context.Context, quizId int, question string, options []string, correctIndex int) (int, error)
 	InsertPodJob(ctx context.Context, podId int) (int, error)
 	UpdatePodJob(ctx context.Context, jobId int, status int) error
 	GetArticleByPodID(ctx context.Context, podID int) (string, error)
 	GetQuizByPodID(ctx context.Context, podID int) (QuizWithQuestions, error)
 	GetJobStatus(ctx context.Context, jobID int) (int, error)
+	GetPodByUserID(ctx context.Context, userId string) ([]Pod, error)
 }
 
 type Pod struct {
@@ -66,9 +67,26 @@ func (s *DBPodStore) GetPodsByLink(ctx context.Context, link string) ([]Pod, err
 	return pods, nil
 }
 
+func (s *DBPodStore) GetPodByUserID(ctx context.Context, userId string) ([]Pod, error) {
+	podDb, err := s.queries.GetPodsByUserID(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+	pods := make([]Pod, len(podDb))
+	for i, pod := range podDb {
+		pods[i] = Pod{
+			ID:        int(pod.ID),
+			Link:      pod.Link,
+			Title:     pod.Title,
+			CreatedAt: pod.CreatedAt.Time,
+		}
+	}
+	return pods, nil
+}
+
 // InsertPod inserts a new Pod and returns its ID.
-func (s *DBPodStore) InsertPod(ctx context.Context, link string) (int, error) {
-	pod, err := s.queries.InsertPod(ctx, link)
+func (s *DBPodStore) InsertPod(ctx context.Context, link, title, userId string) (int, error) {
+	pod, err := s.queries.InsertPod(ctx, db.InsertPodParams{Link: link, Title: title, CreatedBy: userId})
 	if err != nil {
 		return 0, err
 	}
@@ -76,21 +94,17 @@ func (s *DBPodStore) InsertPod(ctx context.Context, link string) (int, error) {
 }
 
 // InsertArticle inserts a new Article.
-func (s *DBPodStore) InsertArticle(ctx context.Context, podId int, userID, content string) error {
+func (s *DBPodStore) InsertArticle(ctx context.Context, podId int, content string) error {
 	err := s.queries.InsertArticle(ctx, db.InsertArticleParams{
 		PodID:       pgtype.Int4{Int32: int32(podId), Valid: true},
-		CreatedBy:   userID,
 		ArticleText: content,
 	})
 	return err
 }
 
 // InsertQuiz inserts a new Quiz and returns its ID.
-func (s *DBPodStore) InsertQuiz(ctx context.Context, podId int, userID string) (int, error) {
-	quiz, err := s.queries.InsertQuiz(ctx, db.InsertQuizParams{
-		PodID:     pgtype.Int4{Int32: int32(podId), Valid: true},
-		CreatedBy: userID,
-	})
+func (s *DBPodStore) InsertQuiz(ctx context.Context, podId int) (int, error) {
+	quiz, err := s.queries.InsertQuiz(ctx, pgtype.Int4{Int32: int32(podId), Valid: true})
 	if err != nil {
 		return 0, err
 	}

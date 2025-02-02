@@ -1,6 +1,6 @@
 -- name: InsertQuiz :one
-INSERT INTO quizzes (pod_id, created_by)
-VALUES ($1, $2)
+INSERT INTO quizzes (pod_id)
+VALUES ($1)
 RETURNING id;
 
 -- name: GetQuizByPodId :one
