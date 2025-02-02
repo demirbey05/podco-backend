@@ -3,13 +3,15 @@ package core
 import (
 	"os"
 
+	firebase "firebase.google.com/go"
+	"github.com/demirbey05/auth-demo/controllers/middleware"
 	"github.com/demirbey05/auth-demo/db"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func InitCore(g *gin.Engine, conn *pgxpool.Pool, queries *db.Queries) {
+func InitCore(g *gin.Engine, conn *pgxpool.Pool, queries *db.Queries, app *firebase.App) {
 	// Configure CORS with FRONTEND_URL
 	frontendURL := os.Getenv("FRONTEND_URL")
 	config := cors.Config{
@@ -20,16 +22,25 @@ func InitCore(g *gin.Engine, conn *pgxpool.Pool, queries *db.Queries) {
 	}
 	g.Use(cors.New(config))
 
-	g.POST("/create-pod", func(ctx *gin.Context) {
+	v1 := g.Group("/v1")
+	protected := v1.Group("/protected")
+
+	protected.Use(middleware.FirebaseAuthMiddleware(app))
+
+	protected.POST("/try", func(ctx *gin.Context) {
+		ctx.JSON(200, gin.H{"message": "You are authorized"})
+	})
+
+	v1.POST("/create-pod", func(ctx *gin.Context) {
 		createNewPod(ctx, conn, queries)
 	})
-	g.GET("/pods/:pod_id/article", func(ctx *gin.Context) {
+	v1.GET("/pods/:pod_id/article", func(ctx *gin.Context) {
 		getArticle(ctx, conn, queries)
 	})
-	g.GET("/pods/:pod_id/quiz", func(ctx *gin.Context) {
+	v1.GET("/pods/:pod_id/quiz", func(ctx *gin.Context) {
 		getQuiz(ctx, conn, queries)
 	})
-	g.GET("/jobs/:job_id/status", func(ctx *gin.Context) {
+	v1.GET("/jobs/:job_id/status", func(ctx *gin.Context) {
 		getJobStatus(ctx, conn, queries)
 	})
 }

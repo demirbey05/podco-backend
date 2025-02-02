@@ -3,9 +3,8 @@
 CREATE TABLE IF NOT EXISTS pods (
     id SERIAL PRIMARY KEY,
     link TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-
-    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(255) NOT NULL
 );
 -- +goose StatementEnd
 

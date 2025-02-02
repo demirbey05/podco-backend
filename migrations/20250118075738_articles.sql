@@ -4,8 +4,7 @@ CREATE TABLE IF NOT EXISTS articles (
     id SERIAL PRIMARY KEY,
     pod_id INT REFERENCES pods(id),
     article_text TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by VARCHAR(255) NOT NULL
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 -- +goose StatementEnd
 
