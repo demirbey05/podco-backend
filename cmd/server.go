@@ -15,6 +15,8 @@ import (
 
 type Server struct {
 	url     string
+	conn    *pgxpool.Pool
+	queries *db.Queries
 	routers *gin.Engine
 	app     *firebase.App
 }
@@ -32,12 +34,11 @@ func NewServer() *Server {
 	if err != nil {
 		panic(err)
 	}
-	addRoutes(r, conn, queries, fireApp)
-	return &Server{url: url, routers: r, app: fireApp}
+	return &Server{url: url, routers: r, app: fireApp, conn: conn, queries: queries}
 }
 func (s *Server) Run() {
-	// Run goose migrations
-
+	// Add routers
+	s.addRoutes()
 	s.routers.Run(s.url)
 }
 func initStores(postgresUrl string) (*pgxpool.Pool, *db.Queries, error) {
@@ -51,7 +52,7 @@ func initStores(postgresUrl string) (*pgxpool.Pool, *db.Queries, error) {
 
 }
 
-func addRoutes(r *gin.Engine, conn *pgxpool.Pool, queries *db.Queries, app *firebase.App) {
-	auth.InitAuth(r)
-	core.InitCore(r, conn, queries, app)
+func (s *Server) addRoutes() {
+	auth.InitAuth(s.routers)
+	core.InitCore(s.routers, s.conn, s.queries, s.app)
 }
