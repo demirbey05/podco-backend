@@ -26,10 +26,10 @@ type PodStore interface {
 }
 
 type Pod struct {
-	ID        int
-	Link      string
-	Title     string
-	CreatedAt time.Time
+	ID        int       `json:"id"`
+	Link      string    `json:"link"`
+	Title     string    `json:"title"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type QuizWithQuestions struct {
