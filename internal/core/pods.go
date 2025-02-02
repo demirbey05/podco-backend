@@ -23,7 +23,11 @@ func CreateNewPod(link, userID string, podStore store.PodStore) (int, int, error
 	defer cancel()
 	// Insert a pod, job and set goroutines
 
-	podId, err := podStore.InsertPod(ctx, link, "", userID)
+	title, err := GetYouTubeVideoTitle(link)
+	if err != nil {
+		return 0, 0, fmt.Errorf("error getting video title: %v", err)
+	}
+	podId, err := podStore.InsertPod(ctx, link, title, userID)
 	if err != nil {
 		return 0, 0, fmt.Errorf("error inserting pod: %v", err)
 	}
