@@ -27,7 +27,7 @@ func NewServer() *Server {
 	}
 
 	url := os.Getenv("SERVICE_URL")
-	opt := option.WithCredentialsFile("../firebaseConfig.json")
+	opt := option.WithCredentialsFile("./firebaseConfig.json")
 	fireApp, err := firebase.NewApp(context.Background(), nil, opt)
 	if err != nil {
 		panic(err)

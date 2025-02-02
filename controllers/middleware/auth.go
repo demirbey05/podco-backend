@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"strings"
 
 	firebase "firebase.google.com/go"
 	"github.com/gin-gonic/gin"
@@ -29,7 +30,9 @@ func FirebaseAuthMiddleware(app *firebase.App) gin.HandlerFunc {
 			return
 		}
 
-		token, err := client.VerifyIDToken(context.Background(), idToken)
+		// Strip the "Bearer " prefix
+		parts := strings.Split(idToken, " ")
+		token, err := client.VerifyIDToken(context.Background(), parts[1])
 		if err != nil {
 			log.Printf("error verifying ID token: %v\n", err)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid ID token"})
