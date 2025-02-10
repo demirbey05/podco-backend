@@ -22,15 +22,20 @@ func (q *Queries) GetArticleByPodId(ctx context.Context, podID pgtype.Int4) (str
 	return article_text, err
 }
 
-const getArticleOwner = `-- name: GetArticleOwner :one
-SELECT p.created_by FROM articles a INNER JOIN pods p ON a.pod_id = p.id WHERE a.pod_id = $1 LIMIT 1
+const getArticlePodInfo = `-- name: GetArticlePodInfo :one
+SELECT p.created_by,p.is_public FROM articles a INNER JOIN pods p ON a.pod_id = p.id WHERE a.pod_id = $1 LIMIT 1
 `
 
-func (q *Queries) GetArticleOwner(ctx context.Context, podID pgtype.Int4) (string, error) {
-	row := q.db.QueryRow(ctx, getArticleOwner, podID)
-	var created_by string
-	err := row.Scan(&created_by)
-	return created_by, err
+type GetArticlePodInfoRow struct {
+	CreatedBy string
+	IsPublic  pgtype.Bool
+}
+
+func (q *Queries) GetArticlePodInfo(ctx context.Context, podID pgtype.Int4) (GetArticlePodInfoRow, error) {
+	row := q.db.QueryRow(ctx, getArticlePodInfo, podID)
+	var i GetArticlePodInfoRow
+	err := row.Scan(&i.CreatedBy, &i.IsPublic)
+	return i, err
 }
 
 const insertArticle = `-- name: InsertArticle :exec

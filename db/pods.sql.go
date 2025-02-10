@@ -7,10 +7,12 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const getPodByLink = `-- name: GetPodByLink :many
-select id, title, link, created_at, created_by from pods where link = $1
+select id, title, link, created_at, created_by, is_public from pods where link = $1
 `
 
 func (q *Queries) GetPodByLink(ctx context.Context, link string) ([]Pod, error) {
@@ -28,6 +30,7 @@ func (q *Queries) GetPodByLink(ctx context.Context, link string) ([]Pod, error) 
 			&i.Link,
 			&i.CreatedAt,
 			&i.CreatedBy,
+			&i.IsPublic,
 		); err != nil {
 			return nil, err
 		}
@@ -40,7 +43,7 @@ func (q *Queries) GetPodByLink(ctx context.Context, link string) ([]Pod, error) 
 }
 
 const getPodsByUserID = `-- name: GetPodsByUserID :many
-SELECT id, title, link, created_at, created_by FROM pods WHERE created_by = $1
+SELECT id, title, link, created_at, created_by, is_public FROM pods WHERE created_by = $1
 `
 
 func (q *Queries) GetPodsByUserID(ctx context.Context, createdBy string) ([]Pod, error) {
@@ -58,6 +61,7 @@ func (q *Queries) GetPodsByUserID(ctx context.Context, createdBy string) ([]Pod,
 			&i.Link,
 			&i.CreatedAt,
 			&i.CreatedBy,
+			&i.IsPublic,
 		); err != nil {
 			return nil, err
 		}
@@ -86,4 +90,18 @@ func (q *Queries) InsertPod(ctx context.Context, arg InsertPodParams) (int32, er
 	var id int32
 	err := row.Scan(&id)
 	return id, err
+}
+
+const updatePodIsPublic = `-- name: UpdatePodIsPublic :exec
+UPDATE pods SET is_public = $1 WHERE id = $2
+`
+
+type UpdatePodIsPublicParams struct {
+	IsPublic pgtype.Bool
+	ID       int32
+}
+
+func (q *Queries) UpdatePodIsPublic(ctx context.Context, arg UpdatePodIsPublicParams) error {
+	_, err := q.db.Exec(ctx, updatePodIsPublic, arg.IsPublic, arg.ID)
+	return err
 }

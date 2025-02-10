@@ -27,6 +27,7 @@ type Pod struct {
 	Link      string
 	CreatedAt pgtype.Timestamp
 	CreatedBy string
+	IsPublic  pgtype.Bool
 }
 
 type Question struct {

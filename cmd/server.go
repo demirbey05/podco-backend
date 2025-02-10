@@ -5,7 +5,6 @@ import (
 	"os"
 
 	firebase "firebase.google.com/go"
-	"github.com/demirbey05/auth-demo/controllers/auth"
 	"github.com/demirbey05/auth-demo/controllers/core"
 	"github.com/demirbey05/auth-demo/db"
 	"github.com/gin-gonic/gin"
@@ -53,6 +52,5 @@ func initStores(postgresUrl string) (*pgxpool.Pool, *db.Queries, error) {
 }
 
 func (s *Server) addRoutes() {
-	auth.InitAuth(s.routers)
 	core.InitCore(s.routers, s.conn, s.queries, s.app)
 }

@@ -12,20 +12,21 @@ import (
 
 type Querier interface {
 	GetArticleByPodId(ctx context.Context, podID pgtype.Int4) (string, error)
-	GetArticleOwner(ctx context.Context, podID pgtype.Int4) (string, error)
+	GetArticlePodInfo(ctx context.Context, podID pgtype.Int4) (GetArticlePodInfoRow, error)
 	GetJobStatusByID(ctx context.Context, id int32) (int32, error)
 	GetJobStatusByPodID(ctx context.Context, podID int32) (int32, error)
 	GetPodByLink(ctx context.Context, link string) ([]Pod, error)
 	GetPodsByUserID(ctx context.Context, createdBy string) ([]Pod, error)
 	GetQuestionByQuizId(ctx context.Context, quizzesID pgtype.Int4) ([]GetQuestionByQuizIdRow, error)
 	GetQuizByPodId(ctx context.Context, podID pgtype.Int4) (GetQuizByPodIdRow, error)
-	GetQuizOwner(ctx context.Context, podID pgtype.Int4) (string, error)
+	GetQuizPodInfo(ctx context.Context, podID pgtype.Int4) (GetQuizPodInfoRow, error)
 	InsertArticle(ctx context.Context, arg InsertArticleParams) error
 	InsertJob(ctx context.Context, podID int32) (int32, error)
 	InsertPod(ctx context.Context, arg InsertPodParams) (int32, error)
 	InsertQuestion(ctx context.Context, arg InsertQuestionParams) (int32, error)
 	InsertQuiz(ctx context.Context, podID pgtype.Int4) (int32, error)
 	UpdateJobStatusByID(ctx context.Context, arg UpdateJobStatusByIDParams) error
+	UpdatePodIsPublic(ctx context.Context, arg UpdatePodIsPublicParams) error
 }
 
 var _ Querier = (*Queries)(nil)

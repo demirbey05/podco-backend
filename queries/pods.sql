@@ -9,3 +9,6 @@ RETURNING id;
 
 -- name: GetPodsByUserID :many
 SELECT * FROM pods WHERE created_by = $1;
+
+-- name: UpdatePodIsPublic :exec
+UPDATE pods SET is_public = $1 WHERE id = $2;

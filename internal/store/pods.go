@@ -23,6 +23,7 @@ type PodStore interface {
 	GetPodsByUserID(ctx context.Context, userId string) ([]Pod, error)
 	IsArticleOwner(ctx context.Context, articleID int, userID string) (bool, error)
 	IsQuizOwner(ctx context.Context, quizID int, userID string) (bool, error)
+	UpdatePodIsPublic(ctx context.Context, podID int, isPublic bool) error
 }
 
 type Pod struct {
@@ -185,17 +186,20 @@ func (s *DBPodStore) GetJobStatus(ctx context.Context, jobID int) (int, error) {
 }
 
 func (s *DBPodStore) IsArticleOwner(ctx context.Context, articleID int, userID string) (bool, error) {
-	articleOwner, err := s.queries.GetArticleOwner(ctx, pgtype.Int4{Int32: int32(articleID), Valid: true})
+	podInfo, err := s.queries.GetArticlePodInfo(ctx, pgtype.Int4{Int32: int32(articleID), Valid: true})
 	if err != nil {
 		return false, fmt.Errorf("error getting article owner: %w", err)
 	}
-	return articleOwner == userID, nil
+	return podInfo.CreatedBy == userID || podInfo.IsPublic.Bool, nil
 }
 
 func (s *DBPodStore) IsQuizOwner(ctx context.Context, quizID int, userID string) (bool, error) {
-	quizOwner, err := s.queries.GetQuizOwner(ctx, pgtype.Int4{Int32: int32(quizID), Valid: true})
+	podInfo, err := s.queries.GetQuizPodInfo(ctx, pgtype.Int4{Int32: int32(quizID), Valid: true})
 	if err != nil {
 		return false, fmt.Errorf("error getting quiz owner: %w", err)
 	}
-	return quizOwner == userID, nil
+	return podInfo.CreatedBy == userID || podInfo.IsPublic.Bool, nil
+}
+func (s *DBPodStore) UpdatePodIsPublic(ctx context.Context, podID int, isPublic bool) error {
+	return s.queries.UpdatePodIsPublic(ctx, db.UpdatePodIsPublicParams{ID: int32(podID), IsPublic: pgtype.Bool{Bool: isPublic, Valid: true}})
 }
