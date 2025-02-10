@@ -30,6 +30,9 @@ func InitCore(g *gin.Engine, conn *pgxpool.Pool, queries *db.Queries, app *fireb
 	protected.POST("/create-pod", func(ctx *gin.Context) {
 		createNewPod(ctx, conn, queries)
 	})
+	protected.POST("/pods/share/:pod_id", func(ctx *gin.Context) {
+		sharePod(ctx, conn, queries)
+	})
 	protected.GET("/pods/:pod_id/article", func(ctx *gin.Context) {
 		getArticle(ctx, conn, queries)
 	})

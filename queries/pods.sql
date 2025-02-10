@@ -12,3 +12,6 @@ SELECT * FROM pods WHERE created_by = $1;
 
 -- name: UpdatePodIsPublic :exec
 UPDATE pods SET is_public = $1 WHERE id = $2;
+
+-- name: GetPodOwner :one
+SELECT created_by FROM pods WHERE id = $1;

@@ -42,6 +42,17 @@ func (q *Queries) GetPodByLink(ctx context.Context, link string) ([]Pod, error) 
 	return items, nil
 }
 
+const getPodOwner = `-- name: GetPodOwner :one
+SELECT created_by FROM pods WHERE id = $1
+`
+
+func (q *Queries) GetPodOwner(ctx context.Context, id int32) (string, error) {
+	row := q.db.QueryRow(ctx, getPodOwner, id)
+	var created_by string
+	err := row.Scan(&created_by)
+	return created_by, err
+}
+
 const getPodsByUserID = `-- name: GetPodsByUserID :many
 SELECT id, title, link, created_at, created_by, is_public FROM pods WHERE created_by = $1
 `

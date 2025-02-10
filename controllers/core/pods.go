@@ -145,3 +145,39 @@ func getQuiz(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 
 	c.JSON(200, gin.H{"quiz": quiz})
 }
+
+func sharePod(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
+	podIDStr := c.Param("pod_id")
+	var podID int
+	if _, err := fmt.Sscan(podIDStr, &podID); err != nil {
+		c.JSON(400, gin.H{"error": "invalid pod_id"})
+		return
+	}
+
+	userID := c.GetString("uuid")
+	if userID == "" {
+		c.JSON(401, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	podStore := store.NewDBPodStore(queries)
+
+	// Only the pod owner can share (make public)
+	isOwner, err := podStore.IsPodOwner(c.Request.Context(), podID, userID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "internal error"})
+		return
+	}
+	if !isOwner {
+		c.JSON(401, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	// Mark the pod as public
+	if err := podStore.UpdatePodIsPublic(c.Request.Context(), podID, true); err != nil {
+		c.JSON(500, gin.H{"error": "internal error"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Pod is now public"})
+}

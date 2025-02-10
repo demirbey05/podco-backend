@@ -24,6 +24,7 @@ type PodStore interface {
 	IsArticleOwner(ctx context.Context, articleID int, userID string) (bool, error)
 	IsQuizOwner(ctx context.Context, quizID int, userID string) (bool, error)
 	UpdatePodIsPublic(ctx context.Context, podID int, isPublic bool) error
+	IsPodOwner(ctx context.Context, podID int, userID string) (bool, error)
 }
 
 type Pod struct {
@@ -202,4 +203,11 @@ func (s *DBPodStore) IsQuizOwner(ctx context.Context, quizID int, userID string)
 }
 func (s *DBPodStore) UpdatePodIsPublic(ctx context.Context, podID int, isPublic bool) error {
 	return s.queries.UpdatePodIsPublic(ctx, db.UpdatePodIsPublicParams{ID: int32(podID), IsPublic: pgtype.Bool{Bool: isPublic, Valid: true}})
+}
+func (s *DBPodStore) IsPodOwner(ctx context.Context, podID int, userID string) (bool, error) {
+	podOwner, err := s.queries.GetPodOwner(ctx, int32(podID))
+	if err != nil {
+		return false, fmt.Errorf("error getting pod owner: %w", err)
+	}
+	return podOwner == userID, nil
 }
