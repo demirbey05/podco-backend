@@ -26,7 +26,7 @@ func GenerateArticleFromTranscript(transcript string) (string, error) {
 	}
 	defer client.Close()
 
-	model := client.GenerativeModel("gemini-2.0-flash-exp")
+	model := client.GenerativeModel("gemini-2.0-flash")
 
 	model.SetTemperature(1)
 	model.SetTopK(40)
@@ -73,7 +73,7 @@ func GenerateQuizzesFromArticle(article string) (*Quiz, error) {
 		log.Fatalf("Error creating client: %v", err)
 	}
 
-	model := client.GenerativeModel("gemini-2.0-flash-exp")
+	model := client.GenerativeModel("gemini-2.0-flash")
 
 	model.SetTemperature(1)
 	model.SetTopK(40)
@@ -96,7 +96,8 @@ func GenerateQuizzesFromArticle(article string) (*Quiz, error) {
 
 	// Clean up the response by removing markdown code block markers
 	cleanedResponse := strings.TrimPrefix(rawResponse.String(), "```json\n")
-	cleanedResponse = strings.TrimSuffix(cleanedResponse, "```\n")
+	cleanedResponse = strings.TrimSuffix(cleanedResponse, "\n")
+	cleanedResponse = strings.TrimSuffix(cleanedResponse, "```")
 	cleanedResponse = strings.TrimSpace(cleanedResponse) // Remove any remaining whitespace
 
 	var quizResp Quiz
@@ -104,6 +105,8 @@ func GenerateQuizzesFromArticle(article string) (*Quiz, error) {
 		fmt.Println(cleanedResponse)
 		return nil, fmt.Errorf("failed to parse quiz response: %v", err)
 	}
+
+	fmt.Println("Quiz generated successfully")
 
 	return &quizResp, nil
 }

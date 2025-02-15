@@ -159,4 +159,6 @@ func generateQuizJob(article string, podStore store.PodStore, podID, jobId int) 
 		return
 	}
 
+	fmt.Println("Quiz submitted successfully")
+
 }

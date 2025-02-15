@@ -20,6 +20,7 @@ func createNewPod(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 		Link string `json:"link" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
+		fmt.Println(err)
 		c.JSON(400, gin.H{"error": "bind error"})
 		return
 	}
@@ -84,6 +85,7 @@ func getArticle(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 	podID := c.Param("pod_id")
 	var podIDInt int
 	if _, err := fmt.Sscan(podID, &podIDInt); err != nil {
+		fmt.Println(err)
 		c.JSON(400, gin.H{"error": "invalid pod_id"})
 		return
 	}
@@ -95,8 +97,9 @@ func getArticle(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 
 	podStore := store.NewDBPodStore(queries)
 
-	isOwner, err := podStore.IsArticleOwner(c.Request.Context(), podIDInt, userID)
+	isOwner, err := podStore.IsPodOwner(c.Request.Context(), podIDInt, userID)
 	if err != nil {
+		fmt.Println(err)
 		c.JSON(500, gin.H{"error": "internal error"})
 		return
 	}
@@ -106,6 +109,7 @@ func getArticle(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 	}
 	article, err := podStore.GetArticleByPodID(c.Request.Context(), podIDInt)
 	if err != nil {
+		fmt.Println(err)
 		c.JSON(500, gin.H{"error": "internal error"})
 		return
 	}
@@ -128,8 +132,9 @@ func getQuiz(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 	}
 
 	podStore := store.NewDBPodStore(queries)
-	isOwner, err := podStore.IsQuizOwner(c.Request.Context(), podIDInt, userID)
+	isOwner, err := podStore.IsPodOwner(c.Request.Context(), podIDInt, userID)
 	if err != nil {
+		fmt.Println(err)
 		c.JSON(500, gin.H{"error": "internal error"})
 		return
 	}
@@ -139,6 +144,7 @@ func getQuiz(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 	}
 	quiz, err := podStore.GetQuizByPodID(c.Request.Context(), podIDInt)
 	if err != nil {
+		fmt.Println(err)
 		c.JSON(500, gin.H{"error": "internal error"})
 		return
 	}

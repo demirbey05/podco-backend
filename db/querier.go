@@ -16,7 +16,7 @@ type Querier interface {
 	GetJobStatusByID(ctx context.Context, id int32) (int32, error)
 	GetJobStatusByPodID(ctx context.Context, podID int32) (int32, error)
 	GetPodByLink(ctx context.Context, link string) ([]Pod, error)
-	GetPodOwner(ctx context.Context, id int32) (string, error)
+	GetPodOwner(ctx context.Context, id int32) (GetPodOwnerRow, error)
 	GetPodsByUserID(ctx context.Context, createdBy string) ([]Pod, error)
 	GetQuestionByQuizId(ctx context.Context, quizzesID pgtype.Int4) ([]GetQuestionByQuizIdRow, error)
 	GetQuizByPodId(ctx context.Context, podID pgtype.Int4) (GetQuizByPodIdRow, error)

@@ -43,14 +43,19 @@ func (q *Queries) GetPodByLink(ctx context.Context, link string) ([]Pod, error) 
 }
 
 const getPodOwner = `-- name: GetPodOwner :one
-SELECT created_by FROM pods WHERE id = $1
+SELECT created_by,is_public FROM pods WHERE id = $1
 `
 
-func (q *Queries) GetPodOwner(ctx context.Context, id int32) (string, error) {
+type GetPodOwnerRow struct {
+	CreatedBy string
+	IsPublic  pgtype.Bool
+}
+
+func (q *Queries) GetPodOwner(ctx context.Context, id int32) (GetPodOwnerRow, error) {
 	row := q.db.QueryRow(ctx, getPodOwner, id)
-	var created_by string
-	err := row.Scan(&created_by)
-	return created_by, err
+	var i GetPodOwnerRow
+	err := row.Scan(&i.CreatedBy, &i.IsPublic)
+	return i, err
 }
 
 const getPodsByUserID = `-- name: GetPodsByUserID :many

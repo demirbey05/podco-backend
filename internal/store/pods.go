@@ -21,8 +21,6 @@ type PodStore interface {
 	GetQuizByPodID(ctx context.Context, podID int) (QuizWithQuestions, error)
 	GetJobStatus(ctx context.Context, jobID int) (int, error)
 	GetPodsByUserID(ctx context.Context, userId string) ([]Pod, error)
-	IsArticleOwner(ctx context.Context, articleID int, userID string) (bool, error)
-	IsQuizOwner(ctx context.Context, quizID int, userID string) (bool, error)
 	UpdatePodIsPublic(ctx context.Context, podID int, isPublic bool) error
 	IsPodOwner(ctx context.Context, podID int, userID string) (bool, error)
 }
@@ -185,29 +183,13 @@ func (s *DBPodStore) GetJobStatus(ctx context.Context, jobID int) (int, error) {
 	}
 	return int(status), nil
 }
-
-func (s *DBPodStore) IsArticleOwner(ctx context.Context, articleID int, userID string) (bool, error) {
-	podInfo, err := s.queries.GetArticlePodInfo(ctx, pgtype.Int4{Int32: int32(articleID), Valid: true})
-	if err != nil {
-		return false, fmt.Errorf("error getting article owner: %w", err)
-	}
-	return podInfo.CreatedBy == userID || podInfo.IsPublic.Bool, nil
-}
-
-func (s *DBPodStore) IsQuizOwner(ctx context.Context, quizID int, userID string) (bool, error) {
-	podInfo, err := s.queries.GetQuizPodInfo(ctx, pgtype.Int4{Int32: int32(quizID), Valid: true})
-	if err != nil {
-		return false, fmt.Errorf("error getting quiz owner: %w", err)
-	}
-	return podInfo.CreatedBy == userID || podInfo.IsPublic.Bool, nil
-}
 func (s *DBPodStore) UpdatePodIsPublic(ctx context.Context, podID int, isPublic bool) error {
 	return s.queries.UpdatePodIsPublic(ctx, db.UpdatePodIsPublicParams{ID: int32(podID), IsPublic: pgtype.Bool{Bool: isPublic, Valid: true}})
 }
 func (s *DBPodStore) IsPodOwner(ctx context.Context, podID int, userID string) (bool, error) {
-	podOwner, err := s.queries.GetPodOwner(ctx, int32(podID))
+	podInfo, err := s.queries.GetPodOwner(ctx, int32(podID))
 	if err != nil {
 		return false, fmt.Errorf("error getting pod owner: %w", err)
 	}
-	return podOwner == userID, nil
+	return podInfo.CreatedBy == userID || podInfo.IsPublic.Bool, nil
 }
