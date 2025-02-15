@@ -25,8 +25,9 @@ func createNewPod(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 		return
 	}
 	type resp struct {
-		PodID int `json:"pod_id"`
-		JobId int `json:"job_id"`
+		PodID           int `json:"pod_id"`
+		JobId           int `json:"job_id"`
+		RemainingCredit int `json:"remaining_credit"`
 	}
 	userID := c.GetString("uuid")
 	if userID == "" {
@@ -44,8 +45,9 @@ func createNewPod(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 
 	qtx := queries.WithTx(tx)
 	podStore := store.NewDBPodStore(qtx)
+	usageStore := store.NewDBUsageStore(qtx)
 
-	podID, jobID, err := core.CreateNewPod(req.Link, userID, podStore)
+	podID, jobID, remainingCredit, err := core.CreateNewPod(req.Link, userID, podStore, usageStore)
 	if err != nil {
 		fmt.Println(err)
 		c.JSON(500, gin.H{"error": "internal error"})
@@ -58,7 +60,7 @@ func createNewPod(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 		return
 	}
 
-	c.JSON(200, resp{PodID: podID, JobId: jobID})
+	c.JSON(200, resp{PodID: podID, JobId: jobID, RemainingCredit: remainingCredit})
 
 }
 

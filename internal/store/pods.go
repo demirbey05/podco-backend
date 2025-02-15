@@ -30,6 +30,7 @@ type Pod struct {
 	Link      string    `json:"link"`
 	Title     string    `json:"title"`
 	CreatedAt time.Time `json:"created_at"`
+	IsPublic  bool      `json:"is_public"`
 }
 
 type QuizWithQuestions struct {
@@ -65,6 +66,7 @@ func (s *DBPodStore) GetPodsByLink(ctx context.Context, link string) ([]Pod, err
 			Link:      pod.Link,
 			Title:     pod.Title,
 			CreatedAt: pod.CreatedAt.Time,
+			IsPublic:  pod.IsPublic.Bool,
 		}
 	}
 	return pods, nil
@@ -82,6 +84,7 @@ func (s *DBPodStore) GetPodsByUserID(ctx context.Context, userId string) ([]Pod,
 			Link:      pod.Link,
 			Title:     pod.Title,
 			CreatedAt: pod.CreatedAt.Time,
+			IsPublic:  pod.IsPublic.Bool,
 		}
 	}
 	return pods, nil

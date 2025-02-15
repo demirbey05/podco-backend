@@ -11,6 +11,8 @@ import (
 )
 
 type Querier interface {
+	DecrementCredit(ctx context.Context, arg DecrementCreditParams) (int32, error)
+	DeleteCredit(ctx context.Context, userID string) error
 	GetArticleByPodId(ctx context.Context, podID pgtype.Int4) (string, error)
 	GetArticlePodInfo(ctx context.Context, podID pgtype.Int4) (GetArticlePodInfoRow, error)
 	GetJobStatusByID(ctx context.Context, id int32) (int32, error)
@@ -21,11 +23,15 @@ type Querier interface {
 	GetQuestionByQuizId(ctx context.Context, quizzesID pgtype.Int4) ([]GetQuestionByQuizIdRow, error)
 	GetQuizByPodId(ctx context.Context, podID pgtype.Int4) (GetQuizByPodIdRow, error)
 	GetQuizPodInfo(ctx context.Context, podID pgtype.Int4) (GetQuizPodInfoRow, error)
+	GetRemainingCredits(ctx context.Context, userID string) (int32, error)
 	InsertArticle(ctx context.Context, arg InsertArticleParams) error
+	InsertCredit(ctx context.Context, arg InsertCreditParams) error
 	InsertJob(ctx context.Context, podID int32) (int32, error)
 	InsertPod(ctx context.Context, arg InsertPodParams) (int32, error)
 	InsertQuestion(ctx context.Context, arg InsertQuestionParams) (int32, error)
 	InsertQuiz(ctx context.Context, podID pgtype.Int4) (int32, error)
+	IsCreditExist(ctx context.Context, userID string) (bool, error)
+	UpdateCredit(ctx context.Context, arg UpdateCreditParams) (int32, error)
 	UpdateJobStatusByID(ctx context.Context, arg UpdateJobStatusByIDParams) error
 	UpdatePodIsPublic(ctx context.Context, arg UpdatePodIsPublicParams) error
 }

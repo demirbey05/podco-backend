@@ -43,3 +43,9 @@ type Quiz struct {
 	PodID     pgtype.Int4
 	CreatedAt pgtype.Timestamp
 }
+
+type Usage struct {
+	ID      int32
+	UserID  string
+	Credits int32
+}

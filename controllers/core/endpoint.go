@@ -36,6 +36,9 @@ func InitCore(g *gin.Engine, conn *pgxpool.Pool, queries *db.Queries, app *fireb
 	protected.GET("/pods/:pod_id/article", func(ctx *gin.Context) {
 		getArticle(ctx, conn, queries)
 	})
+	protected.GET("/credits", func(c *gin.Context) {
+		getRemainingCredits(c, queries)
+	})
 	protected.GET("/my-pods", func(ctx *gin.Context) {
 		getPodsByUserID(ctx, conn, queries)
 	})

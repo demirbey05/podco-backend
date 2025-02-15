@@ -18,31 +18,44 @@ const (
 	Error
 )
 
-func CreateNewPod(link, userID string, podStore store.PodStore) (int, int, error) {
+func CreateNewPod(link, userID string, podStore store.PodStore, usageStore store.UsageStore) (int, int, int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 	// Insert a pod, job and set goroutines
 
+	// Check Credit
+	remaining, err := usageStore.GetRemainingCredits(ctx, userID)
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("error getting remaining credits: %v", err)
+	}
+	if remaining < 1000 {
+		return 0, 0, 0, fmt.Errorf("insufficient credits")
+	}
+
 	title, err := GetYouTubeVideoTitle(link)
 	if err != nil {
-		return 0, 0, fmt.Errorf("error getting video title: %v", err)
+		return 0, 0, 0, fmt.Errorf("error getting video title: %v", err)
 	}
 	podId, err := podStore.InsertPod(ctx, link, title, userID)
 	if err != nil {
-		return 0, 0, fmt.Errorf("error inserting pod: %v", err)
+		return 0, 0, 0, fmt.Errorf("error inserting pod: %v", err)
 	}
 	jobId, err := podStore.InsertPodJob(ctx, podId)
 	if err != nil {
-		return 0, 0, fmt.Errorf("error inserting job: %v", err)
+		return 0, 0, 0, fmt.Errorf("error inserting job: %v", err)
+	}
+	remaining, err = usageStore.DecrementCredit(ctx, userID)
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("error decrementing credit: %v", err)
 	}
 
 	trans, err := getTranscript(link)
 	if err != nil {
-		return 0, 0, fmt.Errorf("error getting transcript: %v", err)
+		return 0, 0, 0, fmt.Errorf("error getting transcript: %v", err)
 	}
 
 	generateArticleJob(trans, podStore, podId, jobId)
-	return podId, jobId, nil
+	return podId, jobId, remaining, nil
 
 }
 
