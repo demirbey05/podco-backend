@@ -8,8 +8,6 @@ import (
 
 func getRemainingCredits(c *gin.Context, queries *db.Queries) {
 	type resp struct {
-		PodID           int `json:"pod_id"`
-		JobId           int `json:"job_id"`
 		RemainingCredit int `json:"remaining_credit"`
 	}
 	userID := c.GetString("uuid")
