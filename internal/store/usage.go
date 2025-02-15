@@ -22,7 +22,7 @@ func NewDBUsageStore(queries *db.Queries) *DBUsageStore {
 func (s *DBUsageStore) GetRemainingCredits(ctx context.Context, userID string) (int, error) {
 	remaining, err := s.queries.GetRemainingCredits(ctx, userID)
 	if err.Error() == "no rows in result set" {
-		return 15, nil
+		return 15000, nil
 	} else if err != nil {
 		return 0, err
 	}
