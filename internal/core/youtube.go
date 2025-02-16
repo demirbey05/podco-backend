@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"time"
 )
 
 // YouTubeVideoResponse represents the structure of the YouTube API response
@@ -70,34 +69,73 @@ type VideoListResponse struct {
 	} `json:"items"`
 }
 
-// parseISO8601Duration parses a subset of ISO8601 durations (e.g. PT3M45S, PT1H2M3S)
-// For simplicity, this function supports hours, minutes and seconds.
-func parseISO8601Duration(iso string) (time.Duration, error) {
+// parseISO8601Duration parses ISO8601 duration strings and returns the total duration in minutes.
+func parseISO8601Duration(iso string) (int, error) {
 	var hours, minutes, seconds int
-	_, err := fmt.Sscanf(iso, "PT%dH%dM%dS", &hours, &minutes, &seconds)
-	if err != nil {
-		// Try a format without hours
-		_, err = fmt.Sscanf(iso, "PT%dM%dS", &minutes, &seconds)
-		if err != nil {
-			// Try a format with minutes only
-			_, err = fmt.Sscanf(iso, "PT%dM", &minutes)
+
+	// Handle various ISO8601 duration formats
+	if strings.Contains(iso, "H") {
+		if strings.Contains(iso, "M") && strings.Contains(iso, "S") {
+			// Format: PT#H#M#S
+			_, err := fmt.Sscanf(iso, "PT%dH%dM%dS", &hours, &minutes, &seconds)
 			if err != nil {
-				// Try seconds only
-				_, err = fmt.Sscanf(iso, "PT%dS", &seconds)
-				if err != nil {
-					return 0, fmt.Errorf("unsupported duration format: %s", iso)
-				}
+				return 0, fmt.Errorf("unsupported duration format with hours, minutes and seconds: %s", iso)
+			}
+		} else if strings.Contains(iso, "M") {
+			// Format: PT#H#M (no seconds)
+			_, err := fmt.Sscanf(iso, "PT%dH%dM", &hours, &minutes)
+			if err != nil {
+				return 0, fmt.Errorf("unsupported duration format with hours and minutes: %s", iso)
+			}
+		} else if strings.Contains(iso, "S") {
+			// Format: PT#H#S (no minutes)
+			_, err := fmt.Sscanf(iso, "PT%dH%dS", &hours, &seconds)
+			if err != nil {
+				return 0, fmt.Errorf("unsupported duration format with hours and seconds: %s", iso)
+			}
+		} else {
+			// Format: PT#H only
+			_, err := fmt.Sscanf(iso, "PT%dH", &hours)
+			if err != nil {
+				return 0, fmt.Errorf("unsupported duration format with hours only: %s", iso)
 			}
 		}
+	} else if strings.Contains(iso, "M") && strings.Contains(iso, "S") {
+		// Format: PT#M#S
+		_, err := fmt.Sscanf(iso, "PT%dM%dS", &minutes, &seconds)
+		if err != nil {
+			return 0, fmt.Errorf("unsupported duration format with minutes and seconds: %s", iso)
+		}
+	} else if strings.Contains(iso, "M") {
+		// Format: PT#M
+		_, err := fmt.Sscanf(iso, "PT%dM", &minutes)
+		if err != nil {
+			return 0, fmt.Errorf("unsupported duration format with minutes only: %s", iso)
+		}
+	} else if strings.Contains(iso, "S") {
+		// Format: PT#S
+		_, err := fmt.Sscanf(iso, "PT%dS", &seconds)
+		if err != nil {
+			return 0, fmt.Errorf("unsupported duration format with seconds only: %s", iso)
+		}
+	} else {
+		return 0, fmt.Errorf("unsupported duration format: %s", iso)
 	}
-	dur := time.Duration(hours)*time.Hour +
-		time.Duration(minutes)*time.Minute +
-		time.Duration(seconds)*time.Second
-	return dur, nil
+
+	fmt.Println("hours, minutes, seconds", hours, minutes, seconds)
+	totalMinutes := hours*60 + minutes
+
+	// Option 1: Discard seconds entirely. For a video "PT4M8S", totalMinutes = 4.
+	// Option 2: If you want to round up any partial minute, uncomment the following:
+	// if seconds > 0 {
+	//    totalMinutes++
+	// }
+
+	return totalMinutes, nil
 }
 
 // GetYouTubeVideoDuration fetches the video duration from the YouTube Data API.
-func GetYouTubeVideoDuration(canonicalURL string) (float64, error) {
+func GetYouTubeVideoDuration(canonicalURL string) (int, error) {
 	// Extract the video id from the canonical URL.
 	u, err := url.Parse(canonicalURL)
 	if err != nil {
@@ -136,5 +174,17 @@ func GetYouTubeVideoDuration(canonicalURL string) (float64, error) {
 	if err != nil {
 		return 0, fmt.Errorf("error parsing video duration: %v", err)
 	}
-	return dur.Minutes(), nil
+	return dur, nil
+}
+
+// GetYouTubeVideoDurationMinutes fetches the video duration from the YouTube Data API
+// and returns the duration in whole minutes (rounded up).
+func CalculateCost(canonicalURL string) (int, error) {
+	dur, err := GetYouTubeVideoDuration(canonicalURL)
+	if err != nil {
+		return 0, err
+	}
+	fmt.Println("dur is ", dur)
+	// round to nearest minute
+	return dur * 25, nil
 }

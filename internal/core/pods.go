@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -49,14 +48,13 @@ func CreateNewPod(link, userID, language string, podStore store.PodStore, usageS
 	}
 	link = canonLink
 	// Get cost of the job
-	duration, err := GetYouTubeVideoDuration(link)
+	cost, err := CalculateCost(link)
 	if err != nil {
-		return 0, 0, 0, fmt.Errorf("error getting video duration: %v", err)
+		return 0, 0, 0, fmt.Errorf("error calculating cost: %v", err)
 	}
-
-	cost := int(math.Ceil((duration / 24) * 10))
-	fmt.Println("cost is ", cost)
-	fmt.Println("duration is ", duration)
+	if cost == 0 {
+		return 0, 0, 0, fmt.Errorf("invalid link")
+	}
 	// Check Credit
 	remaining, err := usageStore.GetRemainingCredits(ctx, userID)
 	if err != nil {
