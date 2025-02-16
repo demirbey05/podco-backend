@@ -3,6 +3,7 @@ package core
 import "fmt"
 
 var rawArticlePrompt = `I will send you a transcription of the podcast and language of the user.
+Article should be in the user's language.If content language is different than user's language please translate it to user's language. But be careful in technical terms.
 Can you generate medium like article from it?
 In generating markdown you can use following elements :
 - Headings
@@ -12,7 +13,7 @@ In generating markdown you can use following elements :
 
 func generateArticlePrompt(transcript, language string) string {
 
-	return fmt.Sprintf("%s\n\n%s\n\nlanguage:%s", rawArticlePrompt, transcript, language)
+	return fmt.Sprintf("%s\n\n%s\n\nlanguage of user : %s", rawArticlePrompt, transcript, language)
 
 }
 
