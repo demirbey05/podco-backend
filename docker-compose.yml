@@ -17,6 +17,13 @@ services:
   transcriber:
     image: demirbey05/youtube-transcription
     container_name: p2c-transcriber
+    env_file:
+      - .env
+    environment:
+      - PROXY_USER=${PROXY_USER}
+      - PROXY_PASS=${PROXY_PASS}
+      - PROXY_DOMAIN=${PROXY_DOMAIN}
+      - PROXY_PORT=${PROXY_PORT}
     networks:
       - p2c-network
     expose:

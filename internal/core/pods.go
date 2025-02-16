@@ -14,6 +14,23 @@ import (
 	"github.com/demirbey05/auth-demo/internal/store"
 )
 
+var languageMap = map[string]string{
+	"English":    "en",
+	"Spanish":    "es",
+	"French":     "fr",
+	"German":     "de",
+	"Italian":    "it",
+	"Portuguese": "pt",
+	"Dutch":      "nl",
+	"Polish":     "pl",
+	"Russian":    "ru",
+	"Japanese":   "ja",
+	"Korean":     "ko",
+	"Chinese":    "zh",
+	"Turkish":    "tr",
+	"Hindi":      "hi",
+}
+
 const (
 	ArticleGenerated int = iota
 	QuizGenerated
@@ -53,7 +70,7 @@ func CreateNewPod(link, userID, language string, podStore store.PodStore, usageS
 
 	var trans string
 	if os.Getenv("ENV") == "dev" {
-		trans, err = getTranscript(link)
+		trans, err = getTranscript(link, language)
 	} else {
 		trans, err = getTranscriptFromAPI(link)
 	}
@@ -72,7 +89,7 @@ type TranscriptResponse struct {
 	Transcript string `json:"transcript"`
 }
 
-func getTranscript(link string) (string, error) {
+func getTranscript(link, language string) (string, error) {
 	// Load TRANSCRIBER_URL from environment variables
 	transcriberURL, exists := os.LookupEnv("TRANSCRIBER_URL")
 	if !exists {
@@ -85,10 +102,15 @@ func getTranscript(link string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("invalid transcriber URL: %v", err)
 	}
-
+	langCode, ok := languageMap[language]
+	if !ok {
+		fmt.Println(language)
+		return "", fmt.Errorf("invalid language")
+	}
 	// Add the 'url' query parameter
 	query := reqURL.Query()
 	query.Set("url", link)
+	query.Set("language", langCode)
 	reqURL.RawQuery = query.Encode()
 
 	// Create an HTTP client with a timeout
@@ -99,7 +121,7 @@ func getTranscript(link string) (string, error) {
 	// Create a new HTTP GET request with context
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-
+	fmt.Println(reqURL.String())
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL.String(), nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to create HTTP request: %v", err)

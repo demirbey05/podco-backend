@@ -47,8 +47,7 @@ func createNewPod(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 	qtx := queries.WithTx(tx)
 	podStore := store.NewDBPodStore(qtx)
 	usageStore := store.NewDBUsageStore(qtx)
-
-	podID, jobID, remainingCredit, err := core.CreateNewPod(req.Link, req.Language, userID, podStore, usageStore)
+	podID, jobID, remainingCredit, err := core.CreateNewPod(req.Link, userID, req.Language, podStore, usageStore)
 	if err != nil {
 		fmt.Println(err)
 		c.JSON(500, gin.H{"error": "internal error"})
