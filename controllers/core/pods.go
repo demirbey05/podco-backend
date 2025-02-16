@@ -17,7 +17,8 @@ func createNewPod(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 	/* Then article will be sent to llm to generate quiz */
 
 	var req struct {
-		Link string `json:"link" binding:"required"`
+		Link     string `json:"link" binding:"required"`
+		Language string `json:"language" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		fmt.Println(err)
@@ -47,7 +48,7 @@ func createNewPod(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 	podStore := store.NewDBPodStore(qtx)
 	usageStore := store.NewDBUsageStore(qtx)
 
-	podID, jobID, remainingCredit, err := core.CreateNewPod(req.Link, userID, podStore, usageStore)
+	podID, jobID, remainingCredit, err := core.CreateNewPod(req.Link, req.Language, userID, podStore, usageStore)
 	if err != nil {
 		fmt.Println(err)
 		c.JSON(500, gin.H{"error": "internal error"})

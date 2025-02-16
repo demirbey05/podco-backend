@@ -27,7 +27,7 @@ services:
     container_name: p2c-postgres
     environment:
       - POSTGRES_USER=baeldung
-      - POSTGRES_PASSWORD=baeldung
+      - POSTGRES_PASSWORD=chdMTgEHlgrUH8am5xiGspnl76phAz48xnBnH4LvT0fNoc63zE
       - POSTGRES_DB=p2c
     ports:
       - "5432:5432"  # This exposes port 5432 to other containers but not to the host

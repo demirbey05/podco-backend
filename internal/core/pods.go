@@ -1,9 +1,11 @@
 package core
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -18,7 +20,7 @@ const (
 	Error
 )
 
-func CreateNewPod(link, userID string, podStore store.PodStore, usageStore store.UsageStore) (int, int, int, error) {
+func CreateNewPod(link, userID, language string, podStore store.PodStore, usageStore store.UsageStore) (int, int, int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 	// Insert a pod, job and set goroutines
@@ -49,12 +51,18 @@ func CreateNewPod(link, userID string, podStore store.PodStore, usageStore store
 		return 0, 0, 0, fmt.Errorf("error decrementing credit: %v", err)
 	}
 
-	trans, err := getTranscript(link)
+	var trans string
+	if os.Getenv("ENV") == "dev" {
+		trans, err = getTranscript(link)
+	} else {
+		trans, err = getTranscriptFromAPI(link)
+	}
+
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("error getting transcript: %v", err)
 	}
 
-	generateArticleJob(trans, podStore, podId, jobId)
+	generateArticleJob(trans, language, podStore, podId, jobId)
 	return podId, jobId, remaining, nil
 
 }
@@ -120,10 +128,61 @@ func getTranscript(link string) (string, error) {
 	return transcriptResp.Transcript, nil
 }
 
-func generateArticleJob(transcript string, podStore store.PodStore, podId, jobId int) {
+// TranscriptResponse represents the structure of the API response
+type APITranscriptResponse struct {
+	Content []struct {
+		Text string `json:"text"`
+	} `json:"content"`
+}
+
+// getTranscript makes an API call to retrieve the transcript and merges the text segments
+func getTranscriptFromAPI(videoURL string) (string, error) {
+	// Create the request URL
+	url := fmt.Sprintf("https://api.supadata.ai/v1/youtube/transcript?url=%s", videoURL)
+
+	// Create a new HTTP request
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %v", err)
+	}
+
+	// Set the API key in the request header
+	req.Header.Set("x-api-key", os.Getenv("SUPADATA_API_KEY"))
+
+	// Send the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to send request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Read the response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	// Parse the JSON response
+	var transcript APITranscriptResponse
+	if err := json.Unmarshal(body, &transcript); err != nil {
+		return "", fmt.Errorf("failed to unmarshal response: %v", err)
+	}
+
+	// Merge the text segments
+	var mergedText bytes.Buffer
+	for _, segment := range transcript.Content {
+		mergedText.WriteString(segment.Text)
+		mergedText.WriteString(" ") // Add a space between segments
+	}
+
+	return mergedText.String(), nil
+}
+
+func generateArticleJob(transcript, language string, podStore store.PodStore, podId, jobId int) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	article, err := GenerateArticleFromTranscript(transcript)
+	article, err := GenerateArticleFromTranscript(transcript, language)
 	if err != nil {
 		podStore.UpdatePodJob(ctx, jobId, Error)
 		return
@@ -139,12 +198,12 @@ func generateArticleJob(transcript string, podStore store.PodStore, podId, jobId
 		return
 	}
 
-	generateQuizJob(article, podStore, podId, jobId)
+	generateQuizJob(article, language, podStore, podId, jobId)
 }
-func generateQuizJob(article string, podStore store.PodStore, podID, jobId int) {
+func generateQuizJob(article, language string, podStore store.PodStore, podID, jobId int) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	quiz, err := GenerateQuizzesFromArticle(article)
+	quiz, err := GenerateQuizzesFromArticle(article, language)
 	if err != nil {
 		fmt.Println(err)
 		podStore.UpdatePodJob(ctx, jobId, Error)

@@ -12,7 +12,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-func GenerateArticleFromTranscript(transcript string) (string, error) {
+func GenerateArticleFromTranscript(transcript, language string) (string, error) {
 	ctx := context.Background()
 
 	apiKey, ok := os.LookupEnv("LLM_KEY")
@@ -37,7 +37,7 @@ func GenerateArticleFromTranscript(transcript string) (string, error) {
 	session := model.StartChat()
 	session.History = []*genai.Content{}
 
-	resp, err := session.SendMessage(ctx, genai.Text(generateArticlePrompt(transcript)))
+	resp, err := session.SendMessage(ctx, genai.Text(generateArticlePrompt(transcript, language)))
 	if err != nil {
 		return "", fmt.Errorf("error sending message: %v", err)
 	}
@@ -60,7 +60,7 @@ type Quiz struct {
 	Questions []QuizQuestion `json:"questions"`
 }
 
-func GenerateQuizzesFromArticle(article string) (*Quiz, error) {
+func GenerateQuizzesFromArticle(article, language string) (*Quiz, error) {
 	ctx := context.Background()
 
 	apiKey, ok := os.LookupEnv("LLM_KEY")
@@ -83,7 +83,7 @@ func GenerateQuizzesFromArticle(article string) (*Quiz, error) {
 	session := model.StartChat()
 	session.History = []*genai.Content{}
 
-	prompt := generateQuizPrompt(article)
+	prompt := generateQuizPrompt(article, language)
 
 	resp, err := session.SendMessage(ctx, genai.Text(prompt))
 	if err != nil {

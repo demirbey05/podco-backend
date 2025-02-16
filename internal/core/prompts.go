@@ -2,7 +2,7 @@ package core
 
 import "fmt"
 
-var rawArticlePrompt = `I will send you a transcription of the podcast. 
+var rawArticlePrompt = `I will send you a transcription of the podcast and language of the user.
 Can you generate medium like article from it?
 In generating markdown you can use following elements :
 - Headings
@@ -10,13 +10,14 @@ In generating markdown you can use following elements :
 - Tables
 - Bold and italic text`
 
-func generateArticlePrompt(transcript string) string {
+func generateArticlePrompt(transcript, language string) string {
 
-	return fmt.Sprintf("%s\n\n%s", rawArticlePrompt, transcript)
+	return fmt.Sprintf("%s\n\n%s\n\nlanguage:%s", rawArticlePrompt, transcript, language)
 
 }
 
 var rawQuizPrompt = `Generate a quiz based on this article. Follow these rules:
+Quiz should be in the user's language.If content language is different than user's language please translate it to user's language. But be careful in technical terms.
 1. Each question must have exactly 4 options
 2. Options must be plausible distractors
 3. True answer index must be 0-3
@@ -34,6 +35,6 @@ var rawQuizPrompt = `Generate a quiz based on this article. Follow these rules:
 The number of questions is up to you.
 `
 
-func generateQuizPrompt(article string) string {
-	return fmt.Sprintf("%s\n\n%s", rawQuizPrompt, article)
+func generateQuizPrompt(article, language string) string {
+	return fmt.Sprintf("%s\n\n%s\n\nlanguage of user : %s", rawQuizPrompt, article, language)
 }

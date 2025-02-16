@@ -2,7 +2,7 @@
 include .env
 export
 
-.PHONY: run-dev run-migrations down-migrations
+.PHONY: run-dev run-migrations down-migrations build
 
 # Example target
 run-migrations:
@@ -13,4 +13,8 @@ down-migrations:
 
 run-dev:
 	@docker compose up -d --build
-    
+
+build:
+	@docker build . -t podco-backend
+	@docker save podco-backend -o podco-backend.tar
+	@scp podco-backend.tar root@api.podco.xyz:.

@@ -80,7 +80,7 @@ func TestGenerateQuizzesFromArticle(t *testing.T) {
 		t.Log("No .env file found")
 	}
 
-	quiz, err := core.GenerateQuizzesFromArticle(article)
+	quiz, err := core.GenerateQuizzesFromArticle(article, "Turkish")
 	if err != nil {
 		t.Fatalf("GenerateQuizzesFromArticle failed: %v", err)
 	}
