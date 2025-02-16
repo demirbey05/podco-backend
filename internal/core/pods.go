@@ -57,7 +57,6 @@ func CreateNewPod(link, userID, language string, podStore store.PodStore, usageS
 	} else {
 		trans, err = getTranscriptFromAPI(link)
 	}
-
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("error getting transcript: %v", err)
 	}
