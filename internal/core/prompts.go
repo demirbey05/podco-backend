@@ -32,6 +32,7 @@ Quiz should be in the user's language.If content language is different than user
 		}
 	]
 }
+5. The true answer index distribution should be random.
 
 The number of questions is up to you.
 `

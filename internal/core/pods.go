@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/demirbey05/auth-demo/internal/store"
@@ -41,13 +43,26 @@ func CreateNewPod(link, userID, language string, podStore store.PodStore, usageS
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 	// Insert a pod, job and set goroutines
+	canonLink, err := CanonicalizeYouTubeURL(link)
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("error canonicalizing link: %v", err)
+	}
+	link = canonLink
+	// Get cost of the job
+	duration, err := GetYouTubeVideoDuration(link)
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("error getting video duration: %v", err)
+	}
 
+	cost := int(math.Ceil((duration / 24) * 10))
+	fmt.Println("cost is ", cost)
+	fmt.Println("duration is ", duration)
 	// Check Credit
 	remaining, err := usageStore.GetRemainingCredits(ctx, userID)
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("error getting remaining credits: %v", err)
 	}
-	if remaining < 1000 {
+	if remaining < cost {
 		return 0, 0, 0, fmt.Errorf("insufficient credits")
 	}
 
@@ -63,7 +78,7 @@ func CreateNewPod(link, userID, language string, podStore store.PodStore, usageS
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("error inserting job: %v", err)
 	}
-	remaining, err = usageStore.DecrementCredit(ctx, userID)
+	remaining, err = usageStore.DecrementCredit(ctx, userID, cost)
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("error decrementing credit: %v", err)
 	}
@@ -254,4 +269,36 @@ func generateQuizJob(article, language string, podStore store.PodStore, podID, j
 
 	fmt.Println("Quiz submitted successfully")
 
+}
+
+// CanonicalizeYouTubeURL converts a YouTube URL (e.g. youtu.be/VIDEO_ID)
+// into its canonical form: https://www.youtube.com/watch?v=VIDEO_ID.
+func CanonicalizeYouTubeURL(videoURL string) (string, error) {
+	u, err := url.Parse(videoURL)
+	if err != nil {
+		return "", fmt.Errorf("invalid url: %v", err)
+	}
+
+	var videoID string
+	switch u.Host {
+	case "youtu.be":
+		// For URLs like "https://youtu.be/8u2pW2zZLCs?si=0nYPTaKO1--mX0uU"
+		videoID = strings.TrimPrefix(u.Path, "/")
+	case "www.youtube.com", "youtube.com":
+		// For URLs like "https://www.youtube.com/watch?v=8u2pW2zZLCs"
+		if u.Path == "/watch" {
+			videoID = u.Query().Get("v")
+		} else if strings.HasPrefix(u.Path, "/embed/") {
+			videoID = strings.TrimPrefix(u.Path, "/embed/")
+		}
+	default:
+		return "", fmt.Errorf("not a youtube url")
+	}
+
+	if videoID == "" {
+		return "", fmt.Errorf("could not extract video id")
+	}
+
+	canonical := fmt.Sprintf("https://www.youtube.com/watch?v=%s", videoID)
+	return canonical, nil
 }
