@@ -15,6 +15,12 @@ type Article struct {
 	CreatedAt   pgtype.Timestamp
 }
 
+type Feedback struct {
+	CreatedBy string
+	Feedback  []byte
+	CreatedAt pgtype.Timestamp
+}
+
 type Job struct {
 	ID        int32
 	PodID     int32

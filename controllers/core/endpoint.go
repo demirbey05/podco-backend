@@ -39,6 +39,9 @@ func InitCore(g *gin.Engine, conn *pgxpool.Pool, queries *db.Queries, app *fireb
 	protected.GET("/credits", func(c *gin.Context) {
 		getRemainingCredits(c, queries)
 	})
+	protected.POST("/feedback", func(ctx *gin.Context) {
+		insertFeedback(ctx, conn, queries)
+	})
 	protected.GET("/my-pods", func(ctx *gin.Context) {
 		getPodsByUserID(ctx, conn, queries)
 	})

@@ -26,6 +26,7 @@ type Querier interface {
 	GetRemainingCredits(ctx context.Context, userID string) (int32, error)
 	InsertArticle(ctx context.Context, arg InsertArticleParams) error
 	InsertCredit(ctx context.Context, arg InsertCreditParams) error
+	InsertFeedback(ctx context.Context, arg InsertFeedbackParams) error
 	InsertJob(ctx context.Context, podID int32) (int32, error)
 	InsertPod(ctx context.Context, arg InsertPodParams) (int32, error)
 	InsertQuestion(ctx context.Context, arg InsertQuestionParams) (int32, error)
