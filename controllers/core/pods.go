@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/demirbey05/auth-demo/db"
 	"github.com/demirbey05/auth-demo/internal/core"
@@ -49,6 +50,18 @@ func createNewPod(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 	usageStore := store.NewDBUsageStore(qtx)
 	podID, jobID, remainingCredit, err := core.CreateNewPod(req.Link, userID, req.Language, podStore, usageStore)
 	if err != nil {
+		if err.Error() == "invalid link" {
+			c.JSON(400, gin.H{"error": "invalid link"})
+			return
+		}
+		if err.Error() == "insufficient credits" {
+			c.JSON(400, gin.H{"error": "insufficient credits"})
+			return
+		}
+		if strings.HasPrefix(err.Error(), "error canonicalizing link:") {
+			c.JSON(400, gin.H{"error": "invalid youtube link"})
+			return
+		}
 		fmt.Println(err)
 		c.JSON(500, gin.H{"error": "internal error"})
 		return
