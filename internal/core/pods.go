@@ -91,7 +91,9 @@ func CreateNewPod(link, userID, language string, podStore store.PodStore, usageS
 		return 0, 0, 0, fmt.Errorf("error getting transcript: %v", err)
 	}
 
-	generateArticleJob(trans, language, podStore, podId, jobId)
+	if err := generateArticleJob(trans, language, podStore, podId, jobId); err != nil {
+		return 0, 0, 0, err
+	}
 	return podId, jobId, remaining, nil
 
 }
@@ -213,26 +215,27 @@ func getTranscriptFromAPI(videoURL string) (string, error) {
 	return mergedText.String(), nil
 }
 
-func generateArticleJob(transcript, language string, podStore store.PodStore, podId, jobId int) {
+func generateArticleJob(transcript, language string, podStore store.PodStore, podId, jobId int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 	article, err := GenerateArticleFromTranscript(transcript, language)
 	if err != nil {
 		podStore.UpdatePodJob(ctx, jobId, Error)
-		return
+		return fmt.Errorf("content is not educational")
 	}
 
 	if err := podStore.InsertArticle(ctx, podId, article); err != nil {
 		podStore.UpdatePodJob(ctx, jobId, Error)
-		return
+		return fmt.Errorf("internal error")
 	}
 
 	if err := podStore.UpdatePodJob(ctx, jobId, ArticleGenerated); err != nil {
 		podStore.UpdatePodJob(ctx, jobId, Error)
-		return
+		return fmt.Errorf("internal error")
 	}
 
 	generateQuizJob(article, language, podStore, podId, jobId)
+	return nil
 }
 func generateQuizJob(article, language string, podStore store.PodStore, podID, jobId int) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)

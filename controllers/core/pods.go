@@ -62,7 +62,10 @@ func createNewPod(c *gin.Context, conn *pgxpool.Pool, queries *db.Queries) {
 			c.JSON(400, gin.H{"error": "invalid youtube link"})
 			return
 		}
-		fmt.Println(err)
+		if err.Error() == "content is not educational" {
+			c.JSON(400, gin.H{"error": "content is not educational"})
+			return
+		}
 		c.JSON(500, gin.H{"error": "internal error"})
 		return
 	}

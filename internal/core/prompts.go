@@ -2,7 +2,14 @@ package core
 
 import "fmt"
 
-var rawArticlePrompt = `You are an expert educator who deeply understands this subject. Transform this transcript into an educational article that effectively teaches the core concepts.
+var rawArticlePrompt = `First, determine if this transcript contains substantive educational content suitable for creating an educational article and quiz.
+
+If the content is NOT educational (such as movie scenes, music clips, casual conversations, or promotional material), respond ONLY with:
+{
+    "error": "The provided content does not appear to be educational. Please provide a transcript of educational content like a lecture, documentary, or informative podcast."
+}
+
+If the content IS educational, then you are an expert educator who deeply understands this subject. Transform this transcript into an educational article that effectively teaches the core concepts.
 
 As an experienced teacher, you will:
 1. IDENTIFY the 3-5 most important concepts or insights from the content
@@ -27,7 +34,7 @@ If translation is needed:
 - Maintain the pedagogical clarity while adapting to the target language
 - Preserve technical terminology with brief explanations where needed
 
-Present only the educational article without any framing text.`
+Present only the educational article without any framing text or respond with the error JSON if the content is not educational.`
 
 func generateArticlePrompt(transcript, language string) string {
 	return fmt.Sprintf("%s\n\nTranscript: %s\n\nUser language: %s", rawArticlePrompt, transcript, language)

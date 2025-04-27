@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -45,6 +46,18 @@ func GenerateArticleFromTranscript(transcript, language string) (string, error) 
 	var article strings.Builder
 	for _, part := range resp.Candidates[0].Content.Parts {
 		article.WriteString(fmt.Sprintf("%v", part))
+	}
+	if strings.Contains(article.String(), `"error"`) {
+		// Parse the JSON to extract the error message
+		var errorResponse struct {
+			Error string `json:"error"`
+		}
+		err := json.Unmarshal([]byte(article.String()), &errorResponse)
+		if err == nil && errorResponse.Error != "" {
+			return "", errors.New(errorResponse.Error)
+		}
+		// Fallback error if parsing fails
+		return "", errors.New("the provided content could not be processed as educational material")
 	}
 
 	return article.String(), nil
