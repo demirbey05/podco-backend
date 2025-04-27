@@ -2,41 +2,72 @@ package core
 
 import "fmt"
 
-var rawArticlePrompt = `I will send you a transcription of the podcast and language of the user.
-Article should be in the user's language.If content language is different than user's language please translate it to user's language. But be careful in technical terms.
-Can you generate medium like article from it?
-In generating markdown you can use following elements :
-- Headings
-- Lists
-- Tables
-- Bold and italic text`
+var rawArticlePrompt = `You are an expert educator who deeply understands this subject. Transform this transcript into an educational article that effectively teaches the core concepts.
+
+As an experienced teacher, you will:
+1. IDENTIFY the 3-5 most important concepts or insights from the content
+2. EXPLAIN these concepts clearly, as if teaching a class of engaged students
+3. CONNECT ideas logically, building understanding progressively
+4. ILLUSTRATE concepts with relevant examples, analogies, or applications
+5. EMPHASIZE practical takeaways and "why this matters"
+
+Structure your article with:
+- A clear, informative title
+- An introduction setting context and stating learning objectives
+- Well-organized sections with descriptive headings
+- A conclusion reinforcing key learning points
+
+Format using appropriate markdown:
+- ## Main Headings and ### Subheadings
+- Bullet points for lists of related items
+- **Bold** for key terms and important concepts
+- Tables only when they enhance understanding
+
+If translation is needed:
+- Maintain the pedagogical clarity while adapting to the target language
+- Preserve technical terminology with brief explanations where needed
+
+Present only the educational article without any framing text.`
 
 func generateArticlePrompt(transcript, language string) string {
-
-	return fmt.Sprintf("%s\n\n%s\n\nlanguage of user : %s", rawArticlePrompt, transcript, language)
-
+	return fmt.Sprintf("%s\n\nTranscript: %s\n\nUser language: %s", rawArticlePrompt, transcript, language)
 }
 
-var rawQuizPrompt = `Generate a quiz based on this article. Follow these rules:
-Quiz should be in the user's language.If content language is different than user's language please translate it to user's language. But be careful in technical terms.
-1. Each question must have exactly 4 options
-2. Options must be plausible distractors
-3. True answer index must be 0-3
-4. Output must be valid JSON matching this format:
+var rawQuizPrompt = `As an experienced educator who has just taught this material, create an assessment that effectively measures student understanding of the key concepts.
+
+Your pedagogical approach should:
+1. TEST MASTERY of the fundamental concepts rather than memorization of details
+2. ASSESS different levels of understanding:
+   - Basic comprehension of core ideas
+   - Application of concepts to new situations
+   - Analysis of relationships between concepts
+3. PROVIDE questions that:
+   - Are clearly worded as you would present them in class
+   - Focus on what a good teacher would consider important
+   - Challenge students to demonstrate true understanding
+4. DESIGN thoughtful answer options that:
+   - Include one clearly correct answer
+   - Offer plausible distractors that reveal common misconceptions
+   - Help identify gaps in understanding
+
+Format your assessment as valid JSON:
 {
-	"questions": [
-		{
-			"question": "...",
-			"options": ["a", "b", "c", "d"],
-			"true_answer_index": 0
-		}
-	]
+    "questions": [
+        {
+            "question": "Clearly worded question testing an important concept",
+            "options": ["Correct answer", "Plausible distractor", "Plausible distractor", "Plausible distractor"],
+            "true_answer_index": 0,
+            "explanation": "Brief explanation of the concept as you would explain it to a student"
+        }
+    ]
 }
-5. The true answer index distribution should be random.
 
-The number of questions is up to you.
-`
+If translation is needed:
+- Ensure questions maintain their pedagogical clarity in the target language
+- Preserve the educational value of both questions and explanations
+
+Create 7-10 questions that collectively assess mastery of the material's most important concepts.`
 
 func generateQuizPrompt(article, language string) string {
-	return fmt.Sprintf("%s\n\n%s\n\nlanguage of user : %s", rawQuizPrompt, article, language)
+	return fmt.Sprintf("%s\n\nArticle: %s\n\nUser language: %s", rawQuizPrompt, article, language)
 }

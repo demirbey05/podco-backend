@@ -26,7 +26,7 @@ func GenerateArticleFromTranscript(transcript, language string) (string, error) 
 	}
 	defer client.Close()
 
-	model := client.GenerativeModel("gemini-2.0-flash")
+	model := client.GenerativeModel("gemini-2.5-flash-preview-04-17")
 
 	model.SetTemperature(1)
 	model.SetTopK(40)
@@ -73,7 +73,7 @@ func GenerateQuizzesFromArticle(article, language string) (*Quiz, error) {
 		log.Fatalf("Error creating client: %v", err)
 	}
 
-	model := client.GenerativeModel("gemini-2.0-flash")
+	model := client.GenerativeModel("gemini-2.5-flash-preview-04-17")
 
 	model.SetTemperature(1)
 	model.SetTopK(40)
