@@ -58,9 +58,29 @@ Format your assessment as valid JSON:
             "options": ["Correct answer", "Plausible distractor", "Plausible distractor", "Plausible distractor"],
             "true_answer_index": 0,
             "explanation": "Brief explanation of the concept as you would explain it to a student"
+        },
+		{
+            "question": "Clearly worded question testing an important concept",
+            "options": ["Plausible distracter", "Plausible distractor", "Correct answer", "Plausible distractor"],
+            "true_answer_index": 2,
+            "explanation": "Brief explanation of the concept as you would explain it to a student"
+        },
+		{
+            "question": "Clearly worded question testing an important concept",
+            "options": ["Plausible distracter", "Correct answer", "Plausible distractor", "Plausible distractor"],
+            "true_answer_index": 1,
+            "explanation": "Brief explanation of the concept as you would explain it to a student"
+        },
+		{
+            "question": "Clearly worded question testing an important concept",
+            "options": ["Plausible distracter", "Plausible distractor", "Plausible distractor", "Correct answer"],
+            "true_answer_index": 3,
+            "explanation": "Brief explanation of the concept as you would explain it to a student"
         }
     ]
 }
+
+IMPORTANT: Randomize the position of correct answers across your questions. DO NOT place all correct answers in the same position (e.g., all at index 0). Deliberately vary the true_answer_index values (0, 1, 2, or 3) throughout the quiz.
 
 If translation is needed:
 - Ensure questions maintain their pedagogical clarity in the target language
